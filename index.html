@@ -254,6 +254,16 @@ table.stand{width:100%;border-collapse:collapse;min-width:580px}
 .legend{display:flex;gap:20px;margin-top:18px;font-size:.84rem;color:var(--muted);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:8px}.legend i{width:12px;height:12px;border-radius:3px;background:var(--emerald);display:inline-block}
 
+/* блоки групп: таблица + расписание */
+.group-block{margin-bottom:110px;position:relative}
+.group-block:last-child{margin-bottom:0}
+.group-block-h{display:flex;align-items:center;gap:20px;margin-bottom:26px}
+.group-block-h .glet{font-family:var(--f-display);font-weight:800;font-size:3.4rem;line-height:1;color:transparent;-webkit-text-stroke:2px var(--gold-lt);flex-shrink:0;filter:drop-shadow(0 0 18px var(--gold-glow))}
+.group-block-h h3{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.5rem;letter-spacing:.02em;line-height:1.1}
+.group-block-h .gsub{font-family:var(--f-mono);font-size:.7rem;color:var(--muted);letter-spacing:.1em}
+.group-sched-h{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
+.group-sched-h::after{content:'';flex:1;height:1px;background:var(--line)}
+
 /* плей-офф */
 .bracket{display:flex;gap:38px;overflow-x:auto;padding:10px 4px 24px}
 .round{display:flex;flex-direction:column;justify-content:space-around;gap:24px;min-width:250px}
@@ -652,24 +662,19 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
     <h1 class="stage-title">Плей-офф турнира</h1>
     <p class="stage-sub">Впереди — стадия на вылет. Ниже сетка плей-офф, ближайшие матчи и итоговые таблицы всех групп.</p>
 
-    <div class="bracket2-wrap"><div class="bracket2" id="bracketPlayoffMain"></div></div>
+    <div class="bracket" id="bracketPlayoffMain"></div>
 
-    <div class="playoff-split">
-      <div>
-        <div class="s-head" style="align-items:flex-start;text-align:left;margin-bottom:30px">
-          <div class="tag gold"><span class="dot"></span>Расписание</div>
-          <h2 class="s-title" style="font-size:1.7rem">Ближайшие матчи</h2>
-        </div>
-        <div class="matches" id="playoffMatchesMount"></div>
-      </div>
-      <div>
-        <div class="s-head" style="align-items:flex-start;text-align:left;margin-bottom:30px">
-          <div class="tag"><span class="dot"></span>Итоги квалификации</div>
-          <h2 class="s-title" style="font-size:1.7rem">Все группы</h2>
-        </div>
-        <div class="groups-mini-grid" id="groupResultsAll"></div>
-      </div>
+    <div class="s-head" style="margin:80px 0 30px">
+      <div class="tag gold"><span class="dot"></span>Расписание</div>
+      <h2 class="s-title" style="font-size:1.7rem">Ближайшие матчи плей-офф</h2>
     </div>
+    <div class="matches" id="playoffMatchesMount"></div>
+
+    <div class="s-head" style="margin:80px 0 30px">
+      <div class="tag"><span class="dot"></span>Итоги квалификации</div>
+      <h2 class="s-title" style="font-size:1.7rem">Результаты всех групп</h2>
+    </div>
+    <div class="group-results-scroll" id="groupResultsAll"></div>
   </div>
 </div>
 
@@ -834,13 +839,10 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
       <div class="teams-grid" id="teamsGrid"></div>
 
       <div class="s-head reveal" style="margin:130px 0 40px">
-        <div class="tag"><span class="dot"></span>Группа A</div>
-        <h2 class="s-title">Турнирная таблица</h2>
+        <div class="tag"><span class="dot"></span>Групповой этап</div>
+        <h2 class="s-title">Группы и расписание</h2>
       </div>
-      <div class="tbl-wrap reveal">
-        <table class="stand"><thead><tr><th>#</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>О</th></tr></thead><tbody id="standBody"></tbody></table>
-      </div>
-      <div class="legend reveal"><span><i></i> Выход в плей-офф (1–2 места)</span></div>
+      <div id="groupsRoot"></div>
 
       <div class="s-head reveal" style="margin:130px 0 40px">
         <div class="tag gold"><span class="dot"></span>Стадия на вылет</div>
@@ -1006,6 +1008,32 @@ const GROUP_STANDINGS={
     {n:"Юбилейный",c:"#fd79a8",i:6,w:0,d:0,l:6,gf:2,ga:20,p:0},
   ],
 };
+const GROUP_MATCHES={
+  A:[
+    {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",sc:"3 : 1"},
+    {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Заречье",ca:"#e05a4a",cb:"#4a90d9",f:"Поле 2",sc:"2 : 2"},
+    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",live:true},
+    {d:"26 АПР",t:"12:00",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 1"},
+  ],
+  B:[
+    {d:"12 АПР",t:"15:00",a:"Родники Юн.",b:"Кратово Сити",ca:"#9b59d0",cb:"#16a085",f:"Поле 1",sc:"2 : 1"},
+    {d:"12 АПР",t:"16:30",a:"Ильинка",b:"Удельная",ca:"#e67e22",cb:"#27ae60",f:"Поле 2",sc:"1 : 0"},
+    {d:"19 АПР",t:"15:00",a:"Родники Юн.",b:"Ильинка",ca:"#9b59d0",cb:"#e67e22",f:"Поле 1"},
+    {d:"26 АПР",t:"15:00",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2"},
+  ],
+  C:[
+    {d:"13 АПР",t:"12:00",a:"Донино Динамо",b:"Софьино Юг",ca:"#5d6d7e",cb:"#d35400",f:"Поле 1",sc:"4 : 0"},
+    {d:"13 АПР",t:"13:30",a:"Чулково FC",b:"Островцы",ca:"#3498db",cb:"#e84393",f:"Поле 2",sc:"2 : 0"},
+    {d:"20 АПР",t:"12:00",a:"Донино Динамо",b:"Чулково FC",ca:"#5d6d7e",cb:"#3498db",f:"Поле 1"},
+    {d:"27 АПР",t:"12:00",a:"Софьино Юг",b:"Островцы",ca:"#d35400",cb:"#e84393",f:"Поле 2"},
+  ],
+  D:[
+    {d:"13 АПР",t:"15:00",a:"Верея Атлетик",b:"Заворово",ca:"#6c5ce7",cb:"#00b894",f:"Поле 1",sc:"3 : 2"},
+    {d:"13 АПР",t:"16:30",a:"Никоновское",b:"Юбилейный",ca:"#fdcb6e",cb:"#fd79a8",f:"Поле 2",sc:"2 : 0"},
+    {d:"20 АПР",t:"15:00",a:"Верея Атлетик",b:"Никоновское",ca:"#6c5ce7",cb:"#fdcb6e",f:"Поле 1"},
+    {d:"27 АПР",t:"15:00",a:"Заворово",b:"Юбилейный",ca:"#00b894",cb:"#fd79a8",f:"Поле 2"},
+  ],
+};
 const DOCS=[
   {cat:"Регламенты",ic:"📋",col:"rgba(47,160,108,.16)",items:[
     {t:"Устав турнира",ty:"pdf",d:"Основной документ: цели, статус и принципы турнира",full:"Устав закрепляет официальный статус Раменского Кубка Чемпионов, его цели, ценности и организационную структуру. Обязателен к ознакомлению для всех участников."},
@@ -1053,26 +1081,48 @@ function renderTeams(f='all'){
   requestAnimationFrame(revealScan);
 }
 
-/* ТАБЛИЦА */
-document.getElementById('standBody').innerHTML=STAND.map((t,i)=>`
-  <tr class="${i<2?'qual':''}"><td class="pos">${i+1}</td>
-  <td class="tname">${miniShield(t.c,ini(t.n))}${t.n}</td>
-  <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td></tr>`).join('');
-
 /* МАТЧИ */
-function renderMatchList(id,data,useReveal){
-  const el=document.getElementById(id);if(!el)return;
-  const revealCls=useReveal===false?'':'reveal';
-  el.innerHTML=data.map(m=>`
-  <div class="match-row ${revealCls} spot ${m.live?'is-live':''}">
+function matchRowHTML(m,revealCls){
+  const mid=m.live
+    ?'<span class="live-badge"><span class="live-dot"></span>LIVE</span>'
+    :(m.sc?`<div class="score-chip">${m.sc}</div>`:'<div class="score-chip vs">VS</div>');
+  return `
+  <div class="match-row ${revealCls||''} spot ${m.live?'is-live':''}">
     <div class="when">${m.d}<br>${m.t}</div>
     <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a))}</div>
-    ${m.live?'<span class="live-badge"><span class="live-dot"></span>LIVE</span>':'<div class="score-chip vs">VS</div>'}
+    ${mid}
     <div class="tm">${miniShield(m.cb,ini(m.b))} ${m.b}</div>
     <div class="when">${m.f}</div>
-  </div>`).join('');
+  </div>`;
+}
+function renderMatchList(id,data,useReveal){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=data.map(m=>matchRowHTML(m,useReveal===false?'':'reveal')).join('');
 }
 renderMatchList('homeMatches',MATCHES);
+
+/* ГРУППОВОЙ ЭТАП: 4 группы, таблица + расписание */
+function standTableHTML(rows){
+  return `<div class="tbl-wrap"><table class="stand">
+    <thead><tr><th>#</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>О</th></tr></thead>
+    <tbody>${rows.map((t,i)=>`
+      <tr class="${i<2?'qual':''}"><td class="pos">${i+1}</td>
+      <td class="tname">${miniShield(t.c,ini(t.n))}${t.n}</td>
+      <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function renderGroups(){
+  const root=document.getElementById('groupsRoot');if(!root)return;
+  root.innerHTML=Object.keys(GROUP_STANDINGS).map(L=>`
+    <section class="group-block reveal">
+      <div class="group-block-h"><span class="glet">${L}</span><div><h3>Группа ${L}</h3><span class="gsub">4 команды · круговая система</span></div></div>
+      ${standTableHTML(GROUP_STANDINGS[L])}
+      <div class="legend"><span><i></i> Выход в плей-офф (1–2 места)</span></div>
+      <div class="group-sched-h">Расписание матчей</div>
+      <div class="matches">${(GROUP_MATCHES[L]||[]).map(m=>matchRowHTML(m,'')).join('')}</div>
+    </section>`).join('');
+}
+renderGroups();
 
 /* ПЛЕЙ-ОФФ */
 function renderBracket(id){
@@ -1100,7 +1150,7 @@ function renderBracket2(id){
     </div>`;
 }
 renderBracket('bracket');
-renderBracket2('bracketPlayoffMain');
+renderBracket('bracketPlayoffMain');
 renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES,false);
 (function renderGroupResults(){
   const el=document.getElementById('groupResultsAll');if(!el)return;
@@ -1443,7 +1493,7 @@ const ADMIN={
       if(!isNaN(na)&&!isNaN(nb)){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
     }));
     renderBracket('bracket');
-    renderBracket2('bracketPlayoffMain');
+    renderBracket('bracketPlayoffMain');
     this.renderBracketEditor();
   }
 };
