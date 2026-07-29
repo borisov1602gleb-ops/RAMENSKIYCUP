@@ -476,13 +476,17 @@ body.loading .fsu{animation-play-state:paused}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}.reveal{opacity:1;transform:none;filter:none}.pin-wrap{height:auto}.pin-stage{position:static;height:auto}.grain{display:none}.preloader{display:none}}
 
-/* ===== ЭТАПЫ САЙТА (техработы / регистрация / групповой этап) ===== */
+/* ===== ЭТАПЫ САЙТА (техработы / регистрация / групповой этап / плей-офф) ===== */
 body:not([data-stage="maintenance"]) #stage-maintenance{display:none}
 body:not([data-stage="registration"]) #stage-registration{display:none}
+body:not([data-stage="playoff"]) #stage-playoff{display:none}
 body[data-stage="maintenance"] header,body[data-stage="maintenance"] main,body[data-stage="maintenance"] footer,body[data-stage="maintenance"] .to-top,
-body[data-stage="registration"] header,body[data-stage="registration"] main,body[data-stage="registration"] footer,body[data-stage="registration"] .to-top{display:none}
+body[data-stage="registration"] header,body[data-stage="registration"] main,body[data-stage="registration"] footer,body[data-stage="registration"] .to-top,
+body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stage="playoff"] footer,body[data-stage="playoff"] .to-top{display:none}
 
 .stage-screen{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 24px;overflow:hidden}
+.stage-screen.stage-wide{display:block;text-align:left;padding:calc(var(--head-h) + 50px) 24px 90px}
+.stage-screen.stage-wide .stage-inner{max-width:1180px;text-align:center}
 .stage-inner{position:relative;z-index:2;max-width:640px;margin:0 auto}
 .stage-tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:22px}
 .stage-title{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(1.9rem,5.5vw,3.2rem);line-height:1.08;margin-bottom:18px}
@@ -511,6 +515,16 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
 .reg-timer{display:flex;gap:14px;justify-content:center;margin-bottom:44px}
 .reg-cta{font-size:1.15rem;padding:20px 46px}
 
+/* ЭТАП: ПЛЕЙ-ОФФ */
+.group-results-scroll{display:flex;gap:20px;overflow-x:auto;padding:4px 4px 20px}
+.group-result-card{flex:0 0 min(300px,82vw);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--radius);padding:20px}
+.group-result-card h4{font-family:var(--f-head);text-transform:uppercase;font-size:.9rem;letter-spacing:.06em;color:var(--gold-lt);margin-bottom:14px}
+.group-result-card table{width:100%;border-collapse:collapse;font-size:.82rem}
+.group-result-card td{padding:6px 4px;border-top:1px solid var(--line)}
+.group-result-card td:first-child{color:var(--muted);width:18px}
+.group-result-card td:last-child{text-align:right;font-family:var(--f-mono);color:var(--emerald-lt);font-weight:700}
+.group-result-card tr:first-child td{border-top:none}
+
 /* ===== АДМИН-ПАНЕЛЬ ===== */
 .admin-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-start;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:20px;overflow-y:auto}
 .admin-overlay.open{display:flex}
@@ -532,6 +546,13 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
 .admin-note{font-size:.82rem;color:var(--muted);line-height:1.6;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
 .admin-note b{color:var(--text)}
 .admin-more{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;font-size:.82rem;color:var(--muted)}
+.be-round{margin-bottom:16px}
+.be-round-h{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:8px}
+.be-match{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.be-side{display:flex;gap:8px}
+.be-side input{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:8px 10px}
+.be-side input[data-f="name"]{flex:1;min-width:0}
+.be-side input[data-f="score"]{width:56px;text-align:center;flex-shrink:0}
 .draw-result{display:flex;flex-direction:column;gap:8px}
 .draw-group{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.86rem;color:var(--text);line-height:1.5}
 .draw-group b{color:var(--gold-lt);margin-right:6px}
@@ -585,6 +606,29 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
       <div class="seg"><span class="v" id="rt-s">00</span><span class="k">секунд</span></div>
     </div>
     <button class="btn btn-emerald reg-cta" onclick="ADMIN.enterFromRegistration()">Зарегистрировать команду</button>
+  </div>
+</div>
+
+<!-- ЭТАП 4: ПЛЕЙ-ОФФ -->
+<div class="stage-screen stage-wide" id="stage-playoff">
+  <div class="container wide stage-inner">
+    <div class="stage-tag">Групповой этап завершён</div>
+    <h1 class="stage-title">Плей-офф турнира</h1>
+    <p class="stage-sub">Впереди — стадия на вылет. Ниже сетка плей-офф, ближайшие матчи и итоговые таблицы всех групп.</p>
+
+    <div class="bracket" id="bracketPlayoffMain"></div>
+
+    <div class="s-head reveal" style="margin:80px 0 30px">
+      <div class="tag gold"><span class="dot"></span>Расписание</div>
+      <h2 class="s-title" style="font-size:1.7rem">Ближайшие матчи плей-офф</h2>
+    </div>
+    <div class="matches" id="playoffMatchesMount"></div>
+
+    <div class="s-head reveal" style="margin:80px 0 30px">
+      <div class="tag"><span class="dot"></span>Итоги квалификации</div>
+      <h2 class="s-title" style="font-size:1.7rem">Результаты всех групп</h2>
+    </div>
+    <div class="group-results-scroll" id="groupResultsAll"></div>
   </div>
 </div>
 
@@ -821,6 +865,7 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
       <button class="admin-stage-btn" data-stage-btn="maintenance" onclick="ADMIN.preview('maintenance')"><span>🛠 Технические работы</span><span class="k">ЭТАП 1</span></button>
       <button class="admin-stage-btn" data-stage-btn="registration" onclick="ADMIN.preview('registration')"><span>📝 Регистрация команд</span><span class="k">ЭТАП 2</span></button>
       <button class="admin-stage-btn" data-stage-btn="group" onclick="ADMIN.preview('group')"><span>⚽ Групповой этап (сайт)</span><span class="k">ЭТАП 3</span></button>
+      <button class="admin-stage-btn" data-stage-btn="playoff" onclick="ADMIN.preview('playoff')"><span>🏆 Плей-офф</span><span class="k">ЭТАП 4</span></button>
     </div>
     <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.resetPreview()">Сбросить предпросмотр</button>
     <div class="admin-note">Чтобы выбранный этап увидели <b>все посетители сайта</b>, напишите в чат с Claude: «переключи сайт на этап …» — публикация занимает пару минут.</div>
@@ -830,6 +875,13 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
       <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Провести жеребьёвку</button>
       <div id="drawResult" class="draw-result"></div>
       <div class="admin-note" style="margin-top:14px">Как и с этапами — результат виден только у вас. Понравился расклад? Напишите «зафиксируй жеребьёвку» — закреплю группы на сайте для всех.</div>
+    </div>
+    <div class="admin-more">
+      <h3 style="margin-bottom:14px">Сетка плей-офф</h3>
+      <p style="margin-bottom:14px">Впишите названия команд и счёт в каждой паре — победитель подсветится сам, как только оба счёта заполнены.</p>
+      <div id="bracketEditor"></div>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveBracket()">Сохранить сетку (предпросмотр)</button>
+      <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй сетку плей-офф» — закреплю для всех посетителей.</div>
     </div>
     <div class="admin-more">
       <h3 style="margin-bottom:14px">Гибкие настройки сайта</h3>
@@ -886,6 +938,33 @@ const BRACKET=[
   {h:"1/2 финала",m:[[["Двор №5",2,1],["Кратово Сити",1,0]],[["Спартак-Быково",1,0],["Родники Юн.",3,1]]]},
   {h:"🏆 Финал",fin:1,m:[[["Двор №5","—",0],["Родники Юн.","—",0]]]},
 ];
+const PLAYOFF_MATCHES=[
+  {d:"1 ИЮН",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1"},
+  {d:"1 ИЮН",t:"13:30",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2"},
+  {d:"2 ИЮН",t:"12:00",a:"Ильинка",b:"Спартак-Быково",ca:"#e67e22",cb:"#e05a4a",f:"Поле 1"},
+  {d:"2 ИЮН",t:"13:30",a:"Родники Юн.",b:"Атлетико Гжель",ca:"#9b59d0",cb:"#e0b53f",f:"Поле 2"},
+];
+const GROUP_STANDINGS={
+  A:STAND,
+  B:[
+    {n:"Родники Юнайтед",c:"#9b59d0",i:6,w:4,d:1,l:1,gf:16,ga:8,p:13},
+    {n:"Кратово Сити",c:"#16a085",i:6,w:4,d:0,l:2,gf:14,ga:10,p:12},
+    {n:"Ильинка",c:"#e67e22",i:6,w:2,d:2,l:2,gf:10,ga:10,p:8},
+    {n:"Удельная",c:"#27ae60",i:6,w:0,d:1,l:5,gf:4,ga:16,p:1},
+  ],
+  C:[
+    {n:"Донино Динамо",c:"#5d6d7e",i:6,w:5,d:0,l:1,gf:17,ga:7,p:15},
+    {n:"Чулково FC",c:"#3498db",i:6,w:3,d:2,l:1,gf:13,ga:9,p:11},
+    {n:"Софьино Юг",c:"#d35400",i:6,w:2,d:1,l:3,gf:10,ga:13,p:7},
+    {n:"Островцы",c:"#e84393",i:6,w:0,d:1,l:5,gf:3,ga:14,p:1},
+  ],
+  D:[
+    {n:"Верея Атлетик",c:"#6c5ce7",i:6,w:5,d:1,l:0,gf:20,ga:5,p:16},
+    {n:"Заворово",c:"#00b894",i:6,w:3,d:1,l:2,gf:14,ga:10,p:10},
+    {n:"Никоновское",c:"#fdcb6e",i:6,w:2,d:0,l:4,gf:9,ga:15,p:6},
+    {n:"Юбилейный",c:"#fd79a8",i:6,w:0,d:0,l:6,gf:2,ga:20,p:0},
+  ],
+};
 const DOCS=[
   {cat:"Регламенты",ic:"📋",col:"rgba(47,160,108,.16)",items:[
     {t:"Устав турнира",ty:"pdf",d:"Основной документ: цели, статус и принципы турнира",full:"Устав закрепляет официальный статус Раменского Кубка Чемпионов, его цели, ценности и организационную структуру. Обязателен к ознакомлению для всех участников."},
@@ -940,7 +1019,9 @@ document.getElementById('standBody').innerHTML=STAND.map((t,i)=>`
   <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td></tr>`).join('');
 
 /* МАТЧИ */
-document.getElementById('homeMatches').innerHTML=MATCHES.map(m=>`
+function renderMatchList(id,data){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=data.map(m=>`
   <div class="match-row reveal spot ${m.live?'is-live':''}">
     <div class="when">${m.d}<br>${m.t}</div>
     <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a))}</div>
@@ -948,12 +1029,28 @@ document.getElementById('homeMatches').innerHTML=MATCHES.map(m=>`
     <div class="tm">${miniShield(m.cb,ini(m.b))} ${m.b}</div>
     <div class="when">${m.f}</div>
   </div>`).join('');
+}
+renderMatchList('homeMatches',MATCHES);
 
 /* ПЛЕЙ-ОФФ */
-document.getElementById('bracket').innerHTML=BRACKET.map(r=>`
+function renderBracket(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=BRACKET.map(r=>`
   <div class="round ${r.fin?'final':''}"><div class="round-h">${r.h}</div>
   ${r.m.map(pair=>`<div class="bmatch spot">${pair.map(tm=>`<div class="bteam ${tm[2]?'win':''}"><span>${tm[0]}</span><span class="sc">${tm[1]}</span></div>`).join('')}</div>`).join('')}
   </div>`).join('');
+}
+renderBracket('bracket');
+renderBracket('bracketPlayoffMain');
+renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES);
+(function renderGroupResults(){
+  const el=document.getElementById('groupResultsAll');if(!el)return;
+  el.innerHTML=Object.keys(GROUP_STANDINGS).map(letter=>{
+    const rows=GROUP_STANDINGS[letter];
+    return `<div class="group-result-card"><h4>Группа ${letter}</h4><table>${rows.map((t,i)=>`
+      <tr><td>${i+1}</td><td class="tname" style="text-align:left">${miniShield(t.c,ini(t.n))}${t.n}</td><td>${t.p}</td></tr>`).join('')}</table></div>`;
+  }).join('');
+})();
 
 /* ДОКУМЕНТЫ */
 document.getElementById('docsRoot').innerHTML=DOCS.map(cat=>`
@@ -1139,7 +1236,7 @@ const STAGE_KEY='rkch_stage_preview';
 const ADMIN_SESSION_KEY='rkch_admin_ok';
 const ADMIN_USER='admin';
 const ADMIN_PASS='Ramensky2025';
-const STAGE_LABELS={maintenance:'Технические работы',registration:'Регистрация команд',group:'Групповой этап'};
+const STAGE_LABELS={maintenance:'Технические работы',registration:'Регистрация команд',group:'Групповой этап',playoff:'Плей-офф'};
 
 function applyStage(stage){document.body.setAttribute('data-stage',stage)}
 (function(){applyStage(localStorage.getItem(STAGE_KEY)||PUBLISHED_STAGE)})();
@@ -1197,7 +1294,7 @@ const ADMIN={
     }
     return false;
   },
-  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm()},
+  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor()},
   closeConsole(){document.getElementById('adminConsole').classList.remove('open')},
   refreshConsole(){
     const current=document.body.getAttribute('data-stage');
@@ -1260,6 +1357,35 @@ const ADMIN={
     if(!s.regOpen){if(e)e.preventDefault();return false}
     go('teams',e);
     return false;
+  },
+  renderBracketEditor(){
+    const root=document.getElementById('bracketEditor');if(!root)return;
+    root.innerHTML=BRACKET.map((round,ri)=>`
+      <div class="be-round">
+        <div class="be-round-h">${round.h}</div>
+        ${round.m.map((pair,mi)=>`
+          <div class="be-match">
+            ${pair.map((tm,si)=>`
+              <div class="be-side">
+                <input type="text" value="${tm[0]}" data-r="${ri}" data-m="${mi}" data-s="${si}" data-f="name">
+                <input type="text" value="${tm[1]}" data-r="${ri}" data-m="${mi}" data-s="${si}" data-f="score">
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>`).join('');
+  },
+  saveBracket(){
+    document.querySelectorAll('#bracketEditor input').forEach(inp=>{
+      const r=+inp.dataset.r,m=+inp.dataset.m,s=+inp.dataset.s;
+      if(inp.dataset.f==='name')BRACKET[r].m[m][s][0]=inp.value;
+      else BRACKET[r].m[m][s][1]=inp.value;
+    });
+    BRACKET.forEach(round=>round.m.forEach(pair=>{
+      const na=parseFloat(pair[0][1]),nb=parseFloat(pair[1][1]);
+      if(!isNaN(na)&&!isNaN(nb)){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
+    }));
+    renderBracket('bracket');
+    renderBracket('bracketPlayoffMain');
+    this.renderBracketEditor();
   }
 };
 
