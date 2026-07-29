@@ -1156,7 +1156,7 @@ const DOCS=[
   {cat:"Регламенты",ic:"📋",col:"rgba(47,160,108,.16)",items:[
     {t:"Устав турнира",ty:"pdf",d:"Основной документ: цели, статус и принципы турнира",full:"Устав закрепляет официальный статус Раменского Кубка Чемпионов, его цели, ценности и организационную структуру. Обязателен к ознакомлению для всех участников."},
     {t:"Устав Оргкомитета",ty:"pdf",d:"Полномочия, состав и порядок работы оргкомитета",full:"Документ описывает состав оргкомитета, зоны ответственности, порядок принятия решений и разрешения спорных ситуаций в ходе турнира."},
-    {t:"Регламент проведения матчей",ty:"pdf",d:"Правила игры 8×8, продолжительность, замены, дисциплина",full:"Формат 8×8 (7 полевых + вратарь), два тайма по 25 минут, до 5 замен. Регулирует систему карточек, дисквалификаций и технических поражений."},
+    {t:"Регламент проведения матчей",ty:"pdf",d:"Правила игры 8×8, продолжительность, замены, дисциплина",full:"Формат 8×8 (7 полевых + вратарь), два тайма по 25 минут, до 5 замен. Регулирует систему карточек, дисквалификаций и технических поражений.",url:"docs/match-reglament.html"},
   ]},
   {cat:"Для участников",ic:"👥",col:"rgba(224,181,63,.14)",items:[
     {t:"Заявка команды",ty:"doc",d:"Форма регистрации команды и заявочного списка",full:"Заполненную заявку с составом (11–16 игроков) необходимо подать до 15 марта 2025 года. Включает данные капитана и контактное лицо."},
@@ -1356,7 +1356,7 @@ document.getElementById('docsRoot').innerHTML=DOCS.map(cat=>`
         <div class="doc-info"><div class="t">${d.t}</div><div class="d">${d.d}</div></div>
         <div class="doc-toggle">+</div>
       </div>
-      <div class="doc-body"><div class="doc-body-inner"><p>${d.full}</p><div class="doc-actions"><a class="doc-btn dl" href="#" onclick="event.preventDefault()">↓ Скачать ${d.ty.toUpperCase()}</a><a class="doc-btn op" href="#" onclick="event.preventDefault()">Открыть онлайн</a></div></div></div>
+      <div class="doc-body"><div class="doc-body-inner"><p>${d.full}</p><div class="doc-actions"><a class="doc-btn dl" href="${d.url||'#'}" ${d.url?'download':'onclick="event.preventDefault()"'}>↓ Скачать ${d.ty.toUpperCase()}</a><a class="doc-btn op" href="${d.url||'#'}" ${d.url?'target="_blank" rel="noopener"':'onclick="event.preventDefault()"'}>Открыть онлайн</a></div></div></div>
     </div>`).join('')}</div></div>`).join('');
 
 /* ФИЛЬТР */
