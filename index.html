@@ -264,6 +264,27 @@ table.stand{width:100%;border-collapse:collapse;min-width:580px}
 .group-sched-h{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
 .group-sched-h::after{content:'';flex:1;height:1px;background:var(--line)}
 
+/* липкая навигация по группам */
+.group-jump{position:sticky;top:calc(var(--head-h) + 12px);z-index:50;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:44px;pointer-events:none}
+.gj-chip{pointer-events:auto;padding:10px 20px;border-radius:var(--shape-full);font-weight:600;font-size:.82rem;color:var(--muted);background:rgba(16,19,24,.75);border:1px solid var(--line-2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:all .3s var(--ease)}
+.gj-chip:hover{color:var(--text);border-color:var(--gold-lt)}
+
+/* форма команды (последние матчи) */
+.fdots{display:inline-flex;gap:4px;vertical-align:middle}
+.fdot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.fdot.fw{background:var(--emerald-lt);box-shadow:0 0 6px var(--emerald-glow)}
+.fdot.fd{background:var(--muted);opacity:.55}
+.fdot.fl{background:var(--red);opacity:.8}
+
+/* новости */
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:860px){.news-grid{grid-template-columns:1fr}}
+.news-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:all .35s var(--ease);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+.news-card:hover{background:var(--panel-2);border-color:var(--emerald);transform:translateY(-4px)}
+.news-date{font-family:var(--f-mono);font-size:.68rem;color:var(--gold-lt);letter-spacing:.16em;margin-bottom:12px}
+.news-card h3{font-family:var(--f-head);font-weight:800;font-size:1.05rem;line-height:1.3;margin-bottom:10px}
+.news-card p{color:var(--muted);font-size:.9rem;line-height:1.6}
+
 /* плей-офф */
 .bracket{display:flex;gap:38px;overflow-x:auto;padding:10px 4px 24px}
 .round{display:flex;flex-direction:column;justify-content:space-around;gap:24px;min-width:250px}
@@ -599,6 +620,15 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 .be-side input{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:8px 10px}
 .be-side input[data-f="name"]{flex:1;min-width:0}
 .be-side input[data-f="score"]{width:56px;text-align:center;flex-shrink:0}
+.ed-match{display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.ed-match .ed-names{flex:1;min-width:0;font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-match input[type="number"]{width:52px;text-align:center;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 4px}
+.ed-match input[type="text"]{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 10px;min-width:0}
+.ed-live{display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:.62rem;color:var(--red);flex-shrink:0;cursor:pointer}
+.ed-del{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line-2);color:var(--muted);font-size:.8rem}
+.ed-del:hover{color:var(--red);border-color:var(--red)}
+.ed-news{margin-bottom:14px}
+.ed-news textarea{width:100%;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:8px 10px;font-family:inherit;min-height:56px;resize:vertical}
 .draw-result{display:flex;flex-direction:column;gap:8px}
 .draw-group{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.86rem;color:var(--text);line-height:1.5}
 .draw-group b{color:var(--gold-lt);margin-right:6px}
@@ -804,6 +834,12 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
         <h2 class="s-title">Ближайшие матчи</h2>
       </div>
       <div class="matches" id="homeMatches"></div>
+
+      <div class="s-head reveal" style="margin:110px 0 40px">
+        <div class="tag gold"><span class="dot"></span>Новости</div>
+        <h2 class="s-title">Жизнь турнира</h2>
+      </div>
+      <div class="news-grid" id="newsRoot"></div>
     </div>
   </div>
 
@@ -842,7 +878,16 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
         <div class="tag"><span class="dot"></span>Групповой этап</div>
         <h2 class="s-title">Группы и расписание</h2>
       </div>
+      <div class="group-jump" id="groupJump"></div>
       <div id="groupsRoot"></div>
+
+      <div class="s-head reveal" style="margin:130px 0 40px">
+        <div class="tag gold"><span class="dot"></span>Статистика</div>
+        <h2 class="s-title">Бомбардиры</h2>
+      </div>
+      <div class="tbl-wrap reveal">
+        <table class="stand"><thead><tr><th>#</th><th style="text-align:left">Игрок</th><th style="text-align:left">Команда</th><th>Голы</th></tr></thead><tbody id="scorersBody"></tbody></table>
+      </div>
 
       <div class="s-head reveal" style="margin:130px 0 40px">
         <div class="tag gold"><span class="dot"></span>Стадия на вылет</div>
@@ -920,6 +965,25 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
       <div class="admin-note" style="margin-top:14px">Как и с этапами — результат виден только у вас. Понравился расклад? Напишите «зафиксируй жеребьёвку» — закреплю группы на сайте для всех.</div>
     </div>
     <div class="admin-more">
+      <h3 style="margin-bottom:14px">Результаты матчей (группы)</h3>
+      <p style="margin-bottom:14px">Введите счёт — турнирные таблицы, форма команд и «Ближайшие матчи» на главной пересчитаются автоматически. Пустой счёт = матч не сыгран.</p>
+      <div id="resultsEditor"></div>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveResults()">Сохранить результаты (предпросмотр)</button>
+      <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй результаты» — закреплю для всех.</div>
+    </div>
+    <div class="admin-more">
+      <h3 style="margin-bottom:14px">Бомбардиры</h3>
+      <div id="scorersEditor"></div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px" onclick="ADMIN.addScorer()">+ Добавить игрока</button>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="ADMIN.saveScorers()">Сохранить бомбардиров (предпросмотр)</button>
+    </div>
+    <div class="admin-more">
+      <h3 style="margin-bottom:14px">Новости</h3>
+      <div id="newsEditor"></div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px" onclick="ADMIN.addNews()">+ Добавить новость</button>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="ADMIN.saveNews()">Сохранить новости (предпросмотр)</button>
+    </div>
+    <div class="admin-more">
       <h3 style="margin-bottom:14px">Сетка плей-офф</h3>
       <p style="margin-bottom:14px">Впишите названия команд и счёт в каждой паре — победитель подсветится сам, как только оба счёта заполнены.</p>
       <div id="bracketEditor"></div>
@@ -964,18 +1028,6 @@ const TEAMS=[
   {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С."],["6","Быстров Р."],["8","Ушаков Д."],["3","Гущин М."]]},
   {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К."],["5","Фадеев И."],["7","Осипов А."],["2","Рогов В."]]},
 ];
-const STAND=[
-  {n:"Двор №5",c:"#2fa06c",i:6,w:5,d:1,l:0,gf:19,ga:6,p:16},
-  {n:"Атлетико Гжель",c:"#e0b53f",i:6,w:4,d:1,l:1,gf:15,ga:9,p:13},
-  {n:"Спартак-Быково",c:"#e05a4a",i:6,w:2,d:1,l:3,gf:11,ga:12,p:7},
-  {n:"Заречье",c:"#4a90d9",i:6,w:0,d:1,l:5,gf:5,ga:23,p:1},
-];
-const MATCHES=[
-  {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",live:true},
-  {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Родники Юн.",ca:"#e05a4a",cb:"#9b59d0",f:"Поле 2"},
-  {d:"13 АПР",t:"12:00",a:"Кратово Сити",b:"Ильинка",ca:"#16a085",cb:"#e67e22",f:"Поле 1"},
-  {d:"13 АПР",t:"13:30",a:"Удельная",b:"Заречье",ca:"#27ae60",cb:"#4a90d9",f:"Поле 2"},
-];
 const BRACKET=[
   {h:"1/4 финала",m:[[["Двор №5",3,1],["Заречье",1,0]],[["Кратово Сити",2,1],["Удельная",0,0]],[["Ильинка",1,0],["Спартак-Быково",2,1]],[["Родники Юн.",4,1],["Атлетико Гжель",2,0]]]},
   {h:"1/2 финала",m:[[["Двор №5",2,1],["Кратово Сити",1,0]],[["Спартак-Быково",1,0],["Родники Юн.",3,1]]]},
@@ -987,53 +1039,83 @@ const PLAYOFF_MATCHES=[
   {d:"2 ИЮН",t:"12:00",a:"Ильинка",b:"Спартак-Быково",ca:"#e67e22",cb:"#e05a4a",f:"Поле 1"},
   {d:"2 ИЮН",t:"13:30",a:"Родники Юн.",b:"Атлетико Гжель",ca:"#9b59d0",cb:"#e0b53f",f:"Поле 2"},
 ];
-const GROUP_STANDINGS={
-  A:STAND,
-  B:[
-    {n:"Родники Юнайтед",c:"#9b59d0",i:6,w:4,d:1,l:1,gf:16,ga:8,p:13},
-    {n:"Кратово Сити",c:"#16a085",i:6,w:4,d:0,l:2,gf:14,ga:10,p:12},
-    {n:"Ильинка",c:"#e67e22",i:6,w:2,d:2,l:2,gf:10,ga:10,p:8},
-    {n:"Удельная",c:"#27ae60",i:6,w:0,d:1,l:5,gf:4,ga:16,p:1},
-  ],
-  C:[
-    {n:"Донино Динамо",c:"#5d6d7e",i:6,w:5,d:0,l:1,gf:17,ga:7,p:15},
-    {n:"Чулково FC",c:"#3498db",i:6,w:3,d:2,l:1,gf:13,ga:9,p:11},
-    {n:"Софьино Юг",c:"#d35400",i:6,w:2,d:1,l:3,gf:10,ga:13,p:7},
-    {n:"Островцы",c:"#e84393",i:6,w:0,d:1,l:5,gf:3,ga:14,p:1},
-  ],
-  D:[
-    {n:"Верея Атлетик",c:"#6c5ce7",i:6,w:5,d:1,l:0,gf:20,ga:5,p:16},
-    {n:"Заворово",c:"#00b894",i:6,w:3,d:1,l:2,gf:14,ga:10,p:10},
-    {n:"Никоновское",c:"#fdcb6e",i:6,w:2,d:0,l:4,gf:9,ga:15,p:6},
-    {n:"Юбилейный",c:"#fd79a8",i:6,w:0,d:0,l:6,gf:2,ga:20,p:0},
-  ],
-};
+/* Календарь групп — единственный источник данных: таблицы, форма команд
+   и «ближайшие матчи» на главной считаются из счётов автоматически */
 const GROUP_MATCHES={
   A:[
     {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",sc:"3 : 1"},
     {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Заречье",ca:"#e05a4a",cb:"#4a90d9",f:"Поле 2",sc:"2 : 2"},
-    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",live:true},
-    {d:"26 АПР",t:"12:00",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 1"},
+    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",sc:"2 : 0"},
+    {d:"19 АПР",t:"13:30",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 2",sc:"3 : 1"},
+    {d:"26 АПР",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1",live:true},
+    {d:"26 АПР",t:"13:30",a:"Атлетико Гжель",b:"Спартак-Быково",ca:"#e0b53f",cb:"#e05a4a",f:"Поле 2"},
   ],
   B:[
-    {d:"12 АПР",t:"15:00",a:"Родники Юн.",b:"Кратово Сити",ca:"#9b59d0",cb:"#16a085",f:"Поле 1",sc:"2 : 1"},
+    {d:"12 АПР",t:"15:00",a:"Родники Юнайтед",b:"Кратово Сити",ca:"#9b59d0",cb:"#16a085",f:"Поле 1",sc:"2 : 1"},
     {d:"12 АПР",t:"16:30",a:"Ильинка",b:"Удельная",ca:"#e67e22",cb:"#27ae60",f:"Поле 2",sc:"1 : 0"},
-    {d:"19 АПР",t:"15:00",a:"Родники Юн.",b:"Ильинка",ca:"#9b59d0",cb:"#e67e22",f:"Поле 1"},
-    {d:"26 АПР",t:"15:00",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2"},
+    {d:"19 АПР",t:"15:00",a:"Родники Юнайтед",b:"Ильинка",ca:"#9b59d0",cb:"#e67e22",f:"Поле 1",sc:"3 : 1"},
+    {d:"19 АПР",t:"16:30",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2",sc:"4 : 0"},
+    {d:"26 АПР",t:"15:00",a:"Родники Юнайтед",b:"Удельная",ca:"#9b59d0",cb:"#27ae60",f:"Поле 1"},
+    {d:"26 АПР",t:"16:30",a:"Кратово Сити",b:"Ильинка",ca:"#16a085",cb:"#e67e22",f:"Поле 2"},
   ],
   C:[
     {d:"13 АПР",t:"12:00",a:"Донино Динамо",b:"Софьино Юг",ca:"#5d6d7e",cb:"#d35400",f:"Поле 1",sc:"4 : 0"},
     {d:"13 АПР",t:"13:30",a:"Чулково FC",b:"Островцы",ca:"#3498db",cb:"#e84393",f:"Поле 2",sc:"2 : 0"},
-    {d:"20 АПР",t:"12:00",a:"Донино Динамо",b:"Чулково FC",ca:"#5d6d7e",cb:"#3498db",f:"Поле 1"},
-    {d:"27 АПР",t:"12:00",a:"Софьино Юг",b:"Островцы",ca:"#d35400",cb:"#e84393",f:"Поле 2"},
+    {d:"20 АПР",t:"12:00",a:"Донино Динамо",b:"Чулково FC",ca:"#5d6d7e",cb:"#3498db",f:"Поле 1",sc:"1 : 1"},
+    {d:"20 АПР",t:"13:30",a:"Софьино Юг",b:"Островцы",ca:"#d35400",cb:"#e84393",f:"Поле 2",sc:"3 : 1"},
+    {d:"27 АПР",t:"12:00",a:"Донино Динамо",b:"Островцы",ca:"#5d6d7e",cb:"#e84393",f:"Поле 1"},
+    {d:"27 АПР",t:"13:30",a:"Чулково FC",b:"Софьино Юг",ca:"#3498db",cb:"#d35400",f:"Поле 2"},
   ],
   D:[
     {d:"13 АПР",t:"15:00",a:"Верея Атлетик",b:"Заворово",ca:"#6c5ce7",cb:"#00b894",f:"Поле 1",sc:"3 : 2"},
     {d:"13 АПР",t:"16:30",a:"Никоновское",b:"Юбилейный",ca:"#fdcb6e",cb:"#fd79a8",f:"Поле 2",sc:"2 : 0"},
-    {d:"20 АПР",t:"15:00",a:"Верея Атлетик",b:"Никоновское",ca:"#6c5ce7",cb:"#fdcb6e",f:"Поле 1"},
-    {d:"27 АПР",t:"15:00",a:"Заворово",b:"Юбилейный",ca:"#00b894",cb:"#fd79a8",f:"Поле 2"},
+    {d:"20 АПР",t:"15:00",a:"Верея Атлетик",b:"Никоновское",ca:"#6c5ce7",cb:"#fdcb6e",f:"Поле 1",sc:"5 : 0"},
+    {d:"20 АПР",t:"16:30",a:"Заворово",b:"Юбилейный",ca:"#00b894",cb:"#fd79a8",f:"Поле 2",sc:"3 : 1"},
+    {d:"27 АПР",t:"15:00",a:"Верея Атлетик",b:"Юбилейный",ca:"#6c5ce7",cb:"#fd79a8",f:"Поле 1"},
+    {d:"27 АПР",t:"16:30",a:"Заворово",b:"Никоновское",ca:"#00b894",cb:"#fdcb6e",f:"Поле 2"},
   ],
 };
+let SCORERS=[
+  {n:"Морозов А.",team:"Двор №5",g:5},
+  {n:"Ефимов К.",team:"Родники Юнайтед",g:4},
+  {n:"Кузьмин А.",team:"Верея Атлетик",g:4},
+  {n:"Щукин В.",team:"Донино Динамо",g:3},
+  {n:"Шарипов Р.",team:"Атлетико Гжель",g:3},
+];
+let NEWS=[
+  {d:"20 АПР",title:"Сыгран второй тур группового этапа",text:"«Верея Атлетик» разгромила «Никоновское» 5:0 и почти гарантировала себе первое место в группе D."},
+  {d:"14 АПР",title:"Открыта продажа атрибутики",text:"Шарфы и футболки турнира можно приобрести у волонтёров на стадионе «Сатурн» в дни матчей."},
+  {d:"12 АПР",title:"Турнир стартовал!",text:"Первые матчи собрали более 300 зрителей. Спасибо всем, кто пришёл поддержать команды."},
+];
+function parseScore(sc){
+  if(!sc)return null;
+  const p=String(sc).split(':').map(s=>parseInt(s.trim(),10));
+  return (p.length===2&&!isNaN(p[0])&&!isNaN(p[1]))?p:null;
+}
+function computeStandings(L){
+  const rows={};
+  const touch=(n,c)=>{if(!rows[n])rows[n]={n,c,i:0,w:0,d:0,l:0,gf:0,ga:0,p:0,form:[]};return rows[n]};
+  (GROUP_MATCHES[L]||[]).forEach(m=>{
+    const A=touch(m.a,m.ca),B=touch(m.b,m.cb);
+    const s=parseScore(m.sc);if(!s)return;
+    A.i++;B.i++;A.gf+=s[0];A.ga+=s[1];B.gf+=s[1];B.ga+=s[0];
+    if(s[0]>s[1]){A.w++;B.l++;A.p+=3;A.form.push('В');B.form.push('П')}
+    else if(s[0]<s[1]){B.w++;A.l++;B.p+=3;B.form.push('В');A.form.push('П')}
+    else{A.d++;B.d++;A.p++;B.p++;A.form.push('Н');B.form.push('Н')}
+  });
+  return Object.values(rows).sort((x,y)=>y.p-x.p||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||x.n.localeCompare(y.n));
+}
+function getGroupStandings(){
+  const out={};
+  Object.keys(GROUP_MATCHES).forEach(L=>{out[L]=computeStandings(L)});
+  return out;
+}
+function upcomingFromGroups(){
+  const out=[];
+  Object.keys(GROUP_MATCHES).forEach(L=>(GROUP_MATCHES[L]||[]).forEach(m=>{if(m.live||!m.sc)out.push(m)}));
+  out.sort((x,y)=>(y.live?1:0)-(x.live?1:0));
+  return out.slice(0,4);
+}
 const DOCS=[
   {cat:"Регламенты",ic:"📋",col:"rgba(47,160,108,.16)",items:[
     {t:"Устав турнира",ty:"pdf",d:"Основной документ: цели, статус и принципы турнира",full:"Устав закрепляет официальный статус Раменского Кубка Чемпионов, его цели, ценности и организационную структуру. Обязателен к ознакомлению для всех участников."},
@@ -1099,28 +1181,62 @@ function renderMatchList(id,data,useReveal){
   const el=document.getElementById(id);if(!el)return;
   el.innerHTML=data.map(m=>matchRowHTML(m,useReveal===false?'':'reveal')).join('');
 }
-renderMatchList('homeMatches',MATCHES);
+function renderHomeMatches(){renderMatchList('homeMatches',upcomingFromGroups())}
+renderHomeMatches();
+
+/* НОВОСТИ */
+function renderNews(){
+  const el=document.getElementById('newsRoot');if(!el)return;
+  el.innerHTML=NEWS.map(n=>`
+    <article class="news-card spot">
+      <div class="news-date">${n.d}</div>
+      <h3>${n.title}</h3>
+      <p>${n.text}</p>
+    </article>`).join('');
+}
+renderNews();
+
+/* БОМБАРДИРЫ */
+function renderScorers(){
+  const el=document.getElementById('scorersBody');if(!el)return;
+  const list=[...SCORERS].sort((a,b)=>b.g-a.g);
+  el.innerHTML=list.map((s,i)=>`
+    <tr><td class="pos">${i+1}</td><td class="tname">${s.n}</td><td style="text-align:left;color:var(--muted)">${s.team}</td><td class="pts">${s.g}</td></tr>`).join('');
+}
+renderScorers();
 
 /* ГРУППОВОЙ ЭТАП: 4 группы, таблица + расписание */
+function formDots(form){
+  if(!form||!form.length)return '';
+  return `<span class="fdots">${form.slice(-5).map(r=>`<i class="fdot ${r==='В'?'fw':r==='Н'?'fd':'fl'}" title="${r}"></i>`).join('')}</span>`;
+}
 function standTableHTML(rows){
   return `<div class="tbl-wrap"><table class="stand">
-    <thead><tr><th>#</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>О</th></tr></thead>
+    <thead><tr><th>#</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>О</th><th>Форма</th></tr></thead>
     <tbody>${rows.map((t,i)=>`
       <tr class="${i<2?'qual':''}"><td class="pos">${i+1}</td>
       <td class="tname">${miniShield(t.c,ini(t.n))}${t.n}</td>
-      <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td></tr>`).join('')}
+      <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td><td>${formDots(t.form)}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
 function renderGroups(){
   const root=document.getElementById('groupsRoot');if(!root)return;
-  root.innerHTML=Object.keys(GROUP_STANDINGS).map(L=>`
-    <section class="group-block reveal">
-      <div class="group-block-h"><span class="glet">${L}</span><div><h3>Группа ${L}</h3><span class="gsub">4 команды · круговая система</span></div></div>
-      ${standTableHTML(GROUP_STANDINGS[L])}
+  const standings=getGroupStandings();
+  const letters=Object.keys(standings);
+  const jump=document.getElementById('groupJump');
+  if(jump)jump.innerHTML=letters.map(L=>`<button class="gj-chip" onclick="document.getElementById('gblock-${L}').scrollIntoView({behavior:'smooth',block:'start'})">Группа ${L}</button>`).join('');
+  root.innerHTML=letters.map(L=>{
+    const ms=GROUP_MATCHES[L]||[];
+    const played=ms.filter(m=>parseScore(m.sc)).length;
+    return `
+    <section class="group-block reveal" id="gblock-${L}">
+      <div class="group-block-h"><span class="glet">${L}</span><div><h3>Группа ${L}</h3><span class="gsub">сыграно ${played} из ${ms.length} матчей</span></div></div>
+      ${standTableHTML(standings[L])}
       <div class="legend"><span><i></i> Выход в плей-офф (1–2 места)</span></div>
       <div class="group-sched-h">Расписание матчей</div>
-      <div class="matches">${(GROUP_MATCHES[L]||[]).map(m=>matchRowHTML(m,'')).join('')}</div>
-    </section>`).join('');
+      <div class="matches">${ms.map(m=>matchRowHTML(m,'')).join('')}</div>
+    </section>`;
+  }).join('');
 }
 renderGroups();
 
@@ -1152,14 +1268,16 @@ function renderBracket2(id){
 renderBracket('bracket');
 renderBracket('bracketPlayoffMain');
 renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES,false);
-(function renderGroupResults(){
+function renderGroupResults(){
   const el=document.getElementById('groupResultsAll');if(!el)return;
-  el.innerHTML=Object.keys(GROUP_STANDINGS).map(letter=>{
-    const rows=GROUP_STANDINGS[letter];
+  const standings=getGroupStandings();
+  el.innerHTML=Object.keys(standings).map(letter=>{
+    const rows=standings[letter];
     return `<div class="group-result-card"><h4>Группа ${letter}</h4><table>${rows.map((t,i)=>`
       <tr><td>${i+1}</td><td class="tname" style="text-align:left">${miniShield(t.c,ini(t.n))}${t.n}</td><td>${t.p}</td></tr>`).join('')}</table></div>`;
   }).join('');
-})();
+}
+renderGroupResults();
 
 /* ДОКУМЕНТЫ */
 document.getElementById('docsRoot').innerHTML=DOCS.map(cat=>`
@@ -1403,7 +1521,7 @@ const ADMIN={
     }
     return false;
   },
-  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor()},
+  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor()},
   closeConsole(){document.getElementById('adminConsole').classList.remove('open')},
   refreshConsole(){
     const current=document.body.getAttribute('data-stage');
@@ -1495,8 +1613,99 @@ const ADMIN={
     renderBracket('bracket');
     renderBracket('bracketPlayoffMain');
     this.renderBracketEditor();
+  },
+  renderResultsEditor(){
+    const root=document.getElementById('resultsEditor');if(!root)return;
+    root.innerHTML=Object.keys(GROUP_MATCHES).map(L=>`
+      <div class="be-round">
+        <div class="be-round-h">Группа ${L}</div>
+        ${GROUP_MATCHES[L].map((m,i)=>{
+          const s=parseScore(m.sc)||['',''];
+          return `<div class="ed-match">
+            <span class="ed-names">${m.a} — ${m.b}</span>
+            <input type="number" min="0" value="${s[0]}" data-g="${L}" data-i="${i}" data-f="a">
+            <input type="number" min="0" value="${s[1]}" data-g="${L}" data-i="${i}" data-f="b">
+            <label class="ed-live"><input type="checkbox" data-g="${L}" data-i="${i}" data-f="live" ${m.live?'checked':''}>LIVE</label>
+          </div>`}).join('')}
+      </div>`).join('');
+  },
+  saveResults(){
+    document.querySelectorAll('#resultsEditor input').forEach(inp=>{
+      const m=GROUP_MATCHES[inp.dataset.g][+inp.dataset.i];
+      if(inp.dataset.f==='live')m.live=inp.checked;
+      else m['_'+inp.dataset.f]=inp.value;
+    });
+    Object.values(GROUP_MATCHES).forEach(ms=>ms.forEach(m=>{
+      if(m._a!==undefined){
+        m.sc=(m._a!==''&&m._b!=='')?`${m._a} : ${m._b}`:null;
+        delete m._a;delete m._b;
+      }
+      if(m.sc&&!m.live)m.live=false;
+    }));
+    const dump={};
+    Object.keys(GROUP_MATCHES).forEach(L=>{dump[L]=GROUP_MATCHES[L].map(m=>({sc:m.sc||null,live:!!m.live}))});
+    localStorage.setItem('rkch_results_preview',JSON.stringify(dump));
+    renderGroups();renderGroupResults();renderHomeMatches();
+    this.renderResultsEditor();
+  },
+  renderScorersEditor(){
+    const root=document.getElementById('scorersEditor');if(!root)return;
+    root.innerHTML=SCORERS.map((s,i)=>`
+      <div class="ed-match">
+        <input type="text" value="${s.n}" placeholder="Игрок" data-si="${i}" data-f="n" style="flex:1.2">
+        <input type="text" value="${s.team}" placeholder="Команда" data-si="${i}" data-f="team" style="flex:1">
+        <input type="number" min="0" value="${s.g}" data-si="${i}" data-f="g">
+        <button class="ed-del" onclick="ADMIN.delScorer(${i})">✕</button>
+      </div>`).join('');
+  },
+  addScorer(){SCORERS.push({n:'',team:'',g:0});this.renderScorersEditor()},
+  delScorer(i){SCORERS.splice(i,1);this.renderScorersEditor()},
+  saveScorers(){
+    document.querySelectorAll('#scorersEditor input').forEach(inp=>{
+      const s=SCORERS[+inp.dataset.si];if(!s)return;
+      s[inp.dataset.f]=inp.dataset.f==='g'?(parseInt(inp.value,10)||0):inp.value;
+    });
+    SCORERS=SCORERS.filter(s=>s.n.trim());
+    localStorage.setItem('rkch_scorers_preview',JSON.stringify(SCORERS));
+    renderScorers();this.renderScorersEditor();
+  },
+  renderNewsEditor(){
+    const root=document.getElementById('newsEditor');if(!root)return;
+    root.innerHTML=NEWS.map((n,i)=>`
+      <div class="ed-news">
+        <div class="ed-match">
+          <input type="text" value="${n.d}" placeholder="Дата" data-ni="${i}" data-f="d" style="width:90px;flex:none">
+          <input type="text" value="${n.title}" placeholder="Заголовок" data-ni="${i}" data-f="title" style="flex:1">
+          <button class="ed-del" onclick="ADMIN.delNews(${i})">✕</button>
+        </div>
+        <textarea data-ni="${i}" data-f="text" placeholder="Текст новости">${n.text}</textarea>
+      </div>`).join('');
+  },
+  addNews(){NEWS.unshift({d:'',title:'',text:''});this.renderNewsEditor()},
+  delNews(i){NEWS.splice(i,1);this.renderNewsEditor()},
+  saveNews(){
+    document.querySelectorAll('#newsEditor input,#newsEditor textarea').forEach(inp=>{
+      const n=NEWS[+inp.dataset.ni];if(!n)return;
+      n[inp.dataset.f]=inp.value;
+    });
+    NEWS=NEWS.filter(n=>n.title.trim());
+    localStorage.setItem('rkch_news_preview',JSON.stringify(NEWS));
+    renderNews();this.renderNewsEditor();
   }
 };
+
+/* загрузка сохранённых предпросмотров админа */
+(function(){
+  try{
+    const r=JSON.parse(localStorage.getItem('rkch_results_preview')||'null');
+    if(r)Object.keys(r).forEach(L=>{(GROUP_MATCHES[L]||[]).forEach((m,i)=>{if(r[L][i]){m.sc=r[L][i].sc;m.live=r[L][i].live}})});
+    const s=JSON.parse(localStorage.getItem('rkch_scorers_preview')||'null');
+    if(s)SCORERS=s;
+    const n=JSON.parse(localStorage.getItem('rkch_news_preview')||'null');
+    if(n)NEWS=n;
+    if(r||s||n){renderGroups();renderGroupResults();renderHomeMatches();renderScorers();renderNews()}
+  }catch(e){}
+})();
 
 function openAdminGate(){
   if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();
