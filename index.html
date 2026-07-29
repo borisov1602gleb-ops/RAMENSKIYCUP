@@ -217,7 +217,7 @@ main{padding-top:0}
 .filter-btn:hover{color:var(--text);border-color:var(--muted)}
 .filter-btn.active{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--emerald),var(--emerald-lt));box-shadow:0 8px 22px var(--emerald-glow)}
 .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
-.team-card{perspective:1300px;height:230px}
+.team-card{perspective:1300px;height:230px;cursor:pointer}
 .team-flip{position:relative;width:100%;height:100%;transition:transform .7s var(--ease);transform-style:preserve-3d}
 .team-card:hover .team-flip{transform:rotateY(180deg)}
 .team-face{position:absolute;inset:0;backface-visibility:hidden;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;display:flex;flex-direction:column}
@@ -239,6 +239,32 @@ main{padding-top:0}
 .team-back .roster{list-style:none;font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 .team-back .roster li{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:5px}
 .team-back .roster .no{font-family:var(--f-mono);color:var(--gold-lt)}
+.team-more{margin-top:12px;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;color:var(--muted);opacity:0;transform:translateX(-4px);transition:all .3s var(--ease)}
+.team-card:hover .team-more{opacity:1;transform:none}
+
+/* модалка состава команды */
+.team-modal-overlay{position:fixed;inset:0;z-index:15000;display:none;align-items:flex-start;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:6vh 20px;overflow-y:auto}
+.team-modal-overlay.open{display:flex}
+.team-modal{width:min(640px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;overflow:hidden}
+.tm-head{display:flex;align-items:center;gap:18px;padding:30px 32px;position:relative;background:var(--panel-2)}
+.tm-head .team-shield{width:56px;height:66px}
+.tm-head h2{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.3rem;letter-spacing:.02em}
+.tm-head .team-grp{margin-top:4px}
+.tm-close{position:absolute;top:20px;right:20px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:.9rem}
+.tm-close:hover{color:var(--text);border-color:var(--muted)}
+.tm-body{padding:10px 32px 32px}
+.tm-cap-line{display:flex;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:22px;font-size:.95rem}
+.tm-cap-line .capstar{color:var(--gold-lt);font-size:1.1rem}
+.tm-cap-line b{color:var(--emerald-lt)}
+.tm-pos-h{font-family:var(--f-mono);font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:22px 0 12px;display:flex;align-items:center;gap:12px}
+.tm-pos-h:first-child{margin-top:0}
+.tm-pos-h::after{content:'';flex:1;height:1px;background:var(--line)}
+.tm-players{display:flex;flex-direction:column;gap:8px}
+.tm-player{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;font-size:.9rem}
+.tm-player .no{font-family:var(--f-mono);font-weight:800;color:var(--gold-lt);min-width:22px}
+.tm-player.is-cap{border-color:rgba(232,199,126,.4);background:rgba(232,199,126,.06)}
+.tm-player .capbadge{margin-left:auto;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;color:var(--gold-lt);border:1px solid rgba(232,199,126,.4);border-radius:var(--shape-full);padding:3px 9px}
+@media(max-width:520px){.tm-head{padding:24px 22px}.tm-body{padding:6px 22px 26px}}
 
 /* таблица */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line-2);border-radius:var(--radius);background:var(--panel)}
@@ -931,6 +957,16 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 
 <button class="to-top" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+<!-- МОДАЛКА: подробный состав команды -->
+<div class="team-modal-overlay" id="teamModal" onclick="if(event.target===this)TEAM_MODAL.close()">
+  <div class="team-modal">
+    <div class="tm-head" id="tmHead">
+      <button class="tm-close" onclick="TEAM_MODAL.close()">✕</button>
+    </div>
+    <div class="tm-body" id="tmBody"></div>
+  </div>
+</div>
+
 <!-- АДМИН-ПАНЕЛЬ: вход -->
 <div class="admin-overlay" id="adminLogin">
   <div class="admin-box">
@@ -1011,22 +1047,22 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 <script>
 /* ДАННЫЕ */
 const TEAMS=[
-  {n:"Двор №5",g:"A",c:"#2fa06c",st:"ok",cap:"А. Морозов",roster:[["9","Морозов А."],["7","Титов К."],["4","Гусев Д."],["1","Белов В."]]},
-  {n:"Атлетико Гжель",g:"A",c:"#e0b53f",st:"ok",cap:"Р. Шарипов",roster:[["10","Шарипов Р."],["8","Крылов И."],["5","Носов П."],["12","Ким А."]]},
-  {n:"Спартак-Быково",g:"A",c:"#e05a4a",st:"ok",cap:"Д. Волков",roster:[["11","Волков Д."],["6","Зуев М."],["3","Лапин С."],["2","Орлов Н."]]},
-  {n:"Заречье",g:"A",c:"#4a90d9",st:"wait",cap:"И. Седов",roster:[["7","Седов И."],["9","Мамонтов А."],["4","Дроздов Е."],["1","Чиж В."]]},
-  {n:"Родники Юнайтед",g:"B",c:"#9b59d0",st:"ok",cap:"К. Ефимов",roster:[["10","Ефимов К."],["8","Панин Р."],["5","Быков Д."],["11","Зотов А."]]},
-  {n:"Кратово Сити",g:"B",c:"#16a085",st:"ok",cap:"С. Рыбаков",roster:[["9","Рыбаков С."],["7","Голубев И."],["6","Фомин Д."],["3","Тарасов М."]]},
-  {n:"Ильинка",g:"B",c:"#e67e22",st:"ok",cap:"П. Жуков",roster:[["11","Жуков П."],["4","Соколов А."],["8","Веселов К."],["1","Груздев Н."]]},
-  {n:"Удельная",g:"B",c:"#27ae60",st:"wait",cap:"А. Логинов",roster:[["10","Логинов А."],["5","Карпов И."],["7","Мельник Д."],["2","Русин В."]]},
-  {n:"Донино Динамо",g:"C",c:"#5d6d7e",st:"ok",cap:"В. Щукин",roster:[["9","Щукин В."],["8","Ларин П."],["4","Хохлов Е."],["1","Юдин А."]]},
-  {n:"Софьино Юг",g:"C",c:"#d35400",st:"ok",cap:"Н. Ковалёв",roster:[["11","Ковалёв Н."],["6","Дёмин Р."],["5","Савин И."],["3","Абрамов Д."]]},
-  {n:"Чулково FC",g:"C",c:"#3498db",st:"ok",cap:"М. Терехов",roster:[["10","Терехов М."],["7","Блинов А."],["8","Котов С."],["12","Ершов В."]]},
-  {n:"Островцы",g:"C",c:"#e84393",st:"wait",cap:"Д. Соловьёв",roster:[["9","Соловьёв Д."],["4","Гончар И."],["6","Пименов К."],["1","Судаков Н."]]},
-  {n:"Верея Атлетик",g:"D",c:"#6c5ce7",st:"ok",cap:"А. Кузьмин",roster:[["11","Кузьмин А."],["8","Родин П."],["5","Галкин Д."],["2","Шилов В."]]},
-  {n:"Заворово",g:"D",c:"#00b894",st:"ok",cap:"И. Панфилов",roster:[["10","Панфилов И."],["7","Дубов А."],["4","Лыков Е."],["1","Зимин Н."]]},
-  {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С."],["6","Быстров Р."],["8","Ушаков Д."],["3","Гущин М."]]},
-  {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К."],["5","Фадеев И."],["7","Осипов А."],["2","Рогов В."]]},
+  {n:"Двор №5",g:"A",c:"#2fa06c",st:"ok",cap:"А. Морозов",roster:[["9","Морозов А.","FWD"],["7","Титов К.","MID"],["4","Гусев Д.","DEF"],["1","Белов В.","GK"]]},
+  {n:"Атлетико Гжель",g:"A",c:"#e0b53f",st:"ok",cap:"Р. Шарипов",roster:[["10","Шарипов Р.","FWD"],["8","Крылов И.","MID"],["5","Носов П.","DEF"],["12","Ким А.","GK"]]},
+  {n:"Спартак-Быково",g:"A",c:"#e05a4a",st:"ok",cap:"Д. Волков",roster:[["11","Волков Д.","FWD"],["6","Зуев М.","MID"],["3","Лапин С.","DEF"],["2","Орлов Н.","GK"]]},
+  {n:"Заречье",g:"A",c:"#4a90d9",st:"wait",cap:"И. Седов",roster:[["7","Седов И.","FWD"],["9","Мамонтов А.","MID"],["4","Дроздов Е.","DEF"],["1","Чиж В.","GK"]]},
+  {n:"Родники Юнайтед",g:"B",c:"#9b59d0",st:"ok",cap:"К. Ефимов",roster:[["10","Ефимов К.","FWD"],["8","Панин Р.","MID"],["5","Быков Д.","DEF"],["11","Зотов А.","GK"]]},
+  {n:"Кратово Сити",g:"B",c:"#16a085",st:"ok",cap:"С. Рыбаков",roster:[["9","Рыбаков С.","FWD"],["7","Голубев И.","MID"],["6","Фомин Д.","DEF"],["3","Тарасов М.","GK"]]},
+  {n:"Ильинка",g:"B",c:"#e67e22",st:"ok",cap:"П. Жуков",roster:[["11","Жуков П.","FWD"],["4","Соколов А.","MID"],["8","Веселов К.","DEF"],["1","Груздев Н.","GK"]]},
+  {n:"Удельная",g:"B",c:"#27ae60",st:"wait",cap:"А. Логинов",roster:[["10","Логинов А.","FWD"],["5","Карпов И.","MID"],["7","Мельник Д.","DEF"],["2","Русин В.","GK"]]},
+  {n:"Донино Динамо",g:"C",c:"#5d6d7e",st:"ok",cap:"В. Щукин",roster:[["9","Щукин В.","FWD"],["8","Ларин П.","MID"],["4","Хохлов Е.","DEF"],["1","Юдин А.","GK"]]},
+  {n:"Софьино Юг",g:"C",c:"#d35400",st:"ok",cap:"Н. Ковалёв",roster:[["11","Ковалёв Н.","FWD"],["6","Дёмин Р.","MID"],["5","Савин И.","DEF"],["3","Абрамов Д.","GK"]]},
+  {n:"Чулково FC",g:"C",c:"#3498db",st:"ok",cap:"М. Терехов",roster:[["10","Терехов М.","FWD"],["7","Блинов А.","MID"],["8","Котов С.","DEF"],["12","Ершов В.","GK"]]},
+  {n:"Островцы",g:"C",c:"#e84393",st:"wait",cap:"Д. Соловьёв",roster:[["9","Соловьёв Д.","FWD"],["4","Гончар И.","MID"],["6","Пименов К.","DEF"],["1","Судаков Н.","GK"]]},
+  {n:"Верея Атлетик",g:"D",c:"#6c5ce7",st:"ok",cap:"А. Кузьмин",roster:[["11","Кузьмин А.","FWD"],["8","Родин П.","MID"],["5","Галкин Д.","DEF"],["2","Шилов В.","GK"]]},
+  {n:"Заворово",g:"D",c:"#00b894",st:"ok",cap:"И. Панфилов",roster:[["10","Панфилов И.","FWD"],["7","Дубов А.","MID"],["4","Лыков Е.","DEF"],["1","Зимин Н.","GK"]]},
+  {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С.","FWD"],["6","Быстров Р.","MID"],["8","Ушаков Д.","DEF"],["3","Гущин М.","GK"]]},
+  {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К.","FWD"],["5","Фадеев И.","MID"],["7","Осипов А.","DEF"],["2","Рогов В.","GK"]]},
 ];
 const BRACKET=[
   {h:"1/4 финала",m:[[["Двор №5",3,1],["Заречье",1,0]],[["Кратово Сити",2,1],["Удельная",0,0]],[["Ильинка",1,0],["Спартак-Быково",2,1]],[["Родники Юн.",4,1],["Атлетико Гжель",2,0]]]},
@@ -1140,11 +1176,41 @@ let sid=0;
 function miniShield(c,letters){const id=sid++;return `<span class="shield"><svg viewBox="0 0 60 72"><defs><linearGradient id="ms${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${c}99"/></linearGradient></defs><path d="M30 2 L56 12 V38 C56 54 44 66 30 70 C16 66 4 54 4 38 V12 Z" fill="url(#ms${id})" stroke="rgba(255,255,255,.2)" stroke-width="2"/></svg><span class="ini">${letters}</span></span>`}
 
 /* УЧАСТНИКИ */
+/* МОДАЛКА СОСТАВА */
+const POS_LABELS={GK:'Вратари',DEF:'Защитники',MID:'Полузащитники',FWD:'Нападающие'};
+const POS_ORDER=['GK','DEF','MID','FWD'];
+const TEAM_MODAL={
+  open(name){
+    const t=TEAMS.find(x=>x.n===name);if(!t)return;
+    document.getElementById('tmHead').innerHTML=`
+      <div class="team-shield">${shieldSVG(t.c,sid++)}<span class="ini">${ini(t.n)}</span></div>
+      <div><h2>${t.n}</h2><div class="team-grp">Группа ${t.g} · ${t.st==='ok'?'Заявка подтверждена':'Лист ожидания'}</div></div>
+      <button class="tm-close" onclick="TEAM_MODAL.close()">✕</button>`;
+    const byPos={};POS_ORDER.forEach(p=>byPos[p]=[]);
+    t.roster.forEach(r=>{(byPos[r[2]]||byPos.MID).push(r)});
+    document.getElementById('tmBody').innerHTML=`
+      <div class="tm-cap-line"><span class="capstar">★</span>Капитан команды — <b>${t.cap}</b></div>
+      ${POS_ORDER.filter(p=>byPos[p].length).map(p=>`
+        <div class="tm-pos-h">${POS_LABELS[p]}</div>
+        <div class="tm-players">${byPos[p].map(r=>{
+          const isCap=r[1].includes(t.cap.split(' ').pop());
+          return `<div class="tm-player ${isCap?'is-cap':''}"><span class="no">#${r[0]}</span><span>${r[1]}</span>${isCap?'<span class="capbadge">КАПИТАН</span>':''}</div>`;
+        }).join('')}</div>`).join('')}`;
+    document.getElementById('teamModal').classList.add('open');
+    document.body.style.overflow='hidden';
+  },
+  close(){
+    document.getElementById('teamModal').classList.remove('open');
+    document.body.style.overflow='';
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')TEAM_MODAL.close()});
+
 function renderTeams(f='all'){
   const grid=document.getElementById('teamsGrid');
   const list=TEAMS.filter(t=>f==='all'||t.g===f);
   grid.innerHTML=list.map((t,idx)=>`
-    <div class="team-card reveal" data-rv="zoom" style="transition-delay:${idx*40}ms">
+    <div class="team-card reveal" data-rv="zoom" style="transition-delay:${idx*40}ms" onclick="TEAM_MODAL.open('${t.n.replace(/'/g,"\\'")}')">
       <div class="team-flip">
         <div class="team-face team-front spot">
           <div class="team-top">
@@ -1152,6 +1218,7 @@ function renderTeams(f='all'){
             <div><div class="team-name">${t.n}</div><div class="team-grp">Группа ${t.g}</div></div>
           </div>
           <span class="badge ${t.st}">${t.st==='ok'?'Подтверждена':'Лист ожидания'}</span>
+          <span class="team-more">Состав команды →</span>
         </div>
         <div class="team-face team-back">
           <h4>Капитан</h4><div class="cap"><b>${t.cap}</b></div>
