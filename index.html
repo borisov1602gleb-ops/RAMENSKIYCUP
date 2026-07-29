@@ -522,8 +522,44 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 .group-result-card table{width:100%;border-collapse:collapse;font-size:.82rem}
 .group-result-card td{padding:6px 4px;border-top:1px solid var(--line)}
 .group-result-card td:first-child{color:var(--muted);width:18px}
+.group-result-card td.tname{display:flex;align-items:center;gap:9px}
 .group-result-card td:last-child{text-align:right;font-family:var(--f-mono);color:var(--emerald-lt);font-weight:700}
 .group-result-card tr:first-child td{border-top:none}
+
+/* сетка плей-офф с двух сторон, сходящаяся к финалу */
+:root{--bm-h:76px;--bm-gap:30px;--bm-elbow:24px}
+.bracket2-wrap{overflow-x:auto;padding:10px 4px 30px}
+.bracket2{display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr;column-gap:var(--bm-elbow);align-items:center;min-width:920px}
+.br-col{display:flex;flex-direction:column;justify-content:center;gap:var(--bm-gap)}
+.br-col-h{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:14px}
+.br-final .br-col-h{color:var(--gold-lt)}
+.bmatch2{position:relative;height:var(--bm-h);background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;justify-content:center;transition:border-color .3s var(--ease),background .3s var(--ease)}
+.bmatch2:hover{background:var(--panel-2);border-color:var(--emerald)}
+.b2team{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:50%;font-size:.86rem;font-weight:600;white-space:nowrap;overflow:hidden}
+.b2team span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b2team:first-child{border-bottom:1px solid var(--line)}
+.b2team.win{color:var(--text)}
+.b2team.win .sc{color:var(--emerald-lt);text-shadow:0 0 10px var(--emerald-glow)}
+.b2team .sc{font-family:var(--f-mono);font-weight:800;color:var(--muted);background:#000;border:1px solid var(--line-2);border-radius:6px;padding:2px 9px;min-width:28px;text-align:center;flex-shrink:0;margin-left:8px}
+.br-final .bmatch2{border-color:rgba(232,199,126,.4);box-shadow:0 0 30px rgba(232,199,126,.14);min-width:210px}
+.br-final .b2team.win .sc{color:var(--gold-lt);text-shadow:0 0 10px var(--gold-glow)}
+
+/* горизонтальные + угловые линии-коннекторы */
+.br-qf-left .bmatch2::after,.br-sf-left .bmatch2::after{content:'';position:absolute;top:50%;right:calc(-1 * var(--bm-elbow));width:var(--bm-elbow);height:1px;background:var(--line-2)}
+.br-qf-right .bmatch2::before,.br-sf-right .bmatch2::before{content:'';position:absolute;top:50%;left:calc(-1 * var(--bm-elbow));width:var(--bm-elbow);height:1px;background:var(--line-2)}
+.br-pair{display:flex;flex-direction:column;gap:var(--bm-gap);position:relative}
+.br-pair::after{content:'';position:absolute;top:calc(var(--bm-h) / 2);bottom:calc(var(--bm-h) / 2);right:calc(-1 * var(--bm-elbow));width:1px;background:var(--line-2)}
+@media(max-width:900px){
+  .bracket2{grid-template-columns:1fr;min-width:0}
+  .br-col{gap:16px;margin-bottom:24px}
+  .br-pair{gap:16px}
+  .br-pair::after,.bmatch2::after,.bmatch2::before{display:none}
+}
+.playoff-split{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:start;margin-top:80px}
+@media(max-width:900px){.playoff-split{grid-template-columns:1fr;gap:50px}}
+.playoff-split .matches{gap:12px}
+.groups-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:520px){.groups-mini-grid{grid-template-columns:1fr}}
 
 /* ===== АДМИН-ПАНЕЛЬ ===== */
 .admin-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-start;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:20px;overflow-y:auto}
@@ -616,19 +652,24 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
     <h1 class="stage-title">Плей-офф турнира</h1>
     <p class="stage-sub">Впереди — стадия на вылет. Ниже сетка плей-офф, ближайшие матчи и итоговые таблицы всех групп.</p>
 
-    <div class="bracket" id="bracketPlayoffMain"></div>
+    <div class="bracket2-wrap"><div class="bracket2" id="bracketPlayoffMain"></div></div>
 
-    <div class="s-head reveal" style="margin:80px 0 30px">
-      <div class="tag gold"><span class="dot"></span>Расписание</div>
-      <h2 class="s-title" style="font-size:1.7rem">Ближайшие матчи плей-офф</h2>
+    <div class="playoff-split">
+      <div>
+        <div class="s-head" style="align-items:flex-start;text-align:left;margin-bottom:30px">
+          <div class="tag gold"><span class="dot"></span>Расписание</div>
+          <h2 class="s-title" style="font-size:1.7rem">Ближайшие матчи</h2>
+        </div>
+        <div class="matches" id="playoffMatchesMount"></div>
+      </div>
+      <div>
+        <div class="s-head" style="align-items:flex-start;text-align:left;margin-bottom:30px">
+          <div class="tag"><span class="dot"></span>Итоги квалификации</div>
+          <h2 class="s-title" style="font-size:1.7rem">Все группы</h2>
+        </div>
+        <div class="groups-mini-grid" id="groupResultsAll"></div>
+      </div>
     </div>
-    <div class="matches" id="playoffMatchesMount"></div>
-
-    <div class="s-head reveal" style="margin:80px 0 30px">
-      <div class="tag"><span class="dot"></span>Итоги квалификации</div>
-      <h2 class="s-title" style="font-size:1.7rem">Результаты всех групп</h2>
-    </div>
-    <div class="group-results-scroll" id="groupResultsAll"></div>
   </div>
 </div>
 
@@ -1019,10 +1060,11 @@ document.getElementById('standBody').innerHTML=STAND.map((t,i)=>`
   <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td></tr>`).join('');
 
 /* МАТЧИ */
-function renderMatchList(id,data){
+function renderMatchList(id,data,useReveal){
   const el=document.getElementById(id);if(!el)return;
+  const revealCls=useReveal===false?'':'reveal';
   el.innerHTML=data.map(m=>`
-  <div class="match-row reveal spot ${m.live?'is-live':''}">
+  <div class="match-row ${revealCls} spot ${m.live?'is-live':''}">
     <div class="when">${m.d}<br>${m.t}</div>
     <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a))}</div>
     ${m.live?'<span class="live-badge"><span class="live-dot"></span>LIVE</span>':'<div class="score-chip vs">VS</div>'}
@@ -1040,9 +1082,26 @@ function renderBracket(id){
   ${r.m.map(pair=>`<div class="bmatch spot">${pair.map(tm=>`<div class="bteam ${tm[2]?'win':''}"><span>${tm[0]}</span><span class="sc">${tm[1]}</span></div>`).join('')}</div>`).join('')}
   </div>`).join('');
 }
+function b2match(pair){
+  return `<div class="bmatch2">${pair.map(tm=>`<div class="b2team ${tm[2]?'win':''}"><span>${tm[0]}</span><span class="sc">${tm[1]}</span></div>`).join('')}</div>`;
+}
+function renderBracket2(id){
+  const el=document.getElementById(id);if(!el)return;
+  const qf=BRACKET[0].m,sf=BRACKET[1].m,fin=BRACKET[2];
+  el.innerHTML=`
+    <div class="br-col br-qf-left"><div class="br-col-h">1/4 финала</div>
+      <div class="br-pair">${b2match(qf[0])}${b2match(qf[1])}</div>
+    </div>
+    <div class="br-col br-sf-left"><div class="br-col-h">1/2 финала</div>${b2match(sf[0])}</div>
+    <div class="br-col br-final"><div class="br-col-h">${fin.h}</div>${b2match(fin.m[0])}</div>
+    <div class="br-col br-sf-right"><div class="br-col-h">1/2 финала</div>${b2match(sf[1])}</div>
+    <div class="br-col br-qf-right"><div class="br-col-h">1/4 финала</div>
+      <div class="br-pair">${b2match(qf[2])}${b2match(qf[3])}</div>
+    </div>`;
+}
 renderBracket('bracket');
-renderBracket('bracketPlayoffMain');
-renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES);
+renderBracket2('bracketPlayoffMain');
+renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES,false);
 (function renderGroupResults(){
   const el=document.getElementById('groupResultsAll');if(!el)return;
   el.innerHTML=Object.keys(GROUP_STANDINGS).map(letter=>{
@@ -1384,7 +1443,7 @@ const ADMIN={
       if(!isNaN(na)&&!isNaN(nb)){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
     }));
     renderBracket('bracket');
-    renderBracket('bracketPlayoffMain');
+    renderBracket2('bracketPlayoffMain');
     this.renderBracketEditor();
   }
 };
