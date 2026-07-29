@@ -1181,12 +1181,25 @@ const ADMIN={
   }
 };
 
+function openAdminGate(){
+  if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();
+}
+let typedBuffer='';
 document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.altKey&&(e.key==='k'||e.key==='K'||e.code==='KeyK')){
     e.preventDefault();
-    if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();
+    openAdminGate();
+    return;
   }
-  if(e.key==='Escape'){ADMIN.closeLogin();ADMIN.closeConsole()}
+  if(e.key==='Escape'){ADMIN.closeLogin();ADMIN.closeConsole();return}
+  const tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(e.key.length===1&&/[a-zA-Zа-яА-Я]/.test(e.key)){
+    typedBuffer=(typedBuffer+e.key.toLowerCase()).slice(-5);
+    if(typedBuffer==='admin'){typedBuffer='';openAdminGate()}
+  }else{
+    typedBuffer='';
+  }
 });
 </script>
 </body>
