@@ -532,6 +532,9 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
 .admin-note{font-size:.82rem;color:var(--muted);line-height:1.6;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
 .admin-note b{color:var(--text)}
 .admin-more{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;font-size:.82rem;color:var(--muted)}
+.draw-result{display:flex;flex-direction:column;gap:8px}
+.draw-group{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.86rem;color:var(--text);line-height:1.5}
+.draw-group b{color:var(--gold-lt);margin-right:6px}
 </style>
 </head>
 <body data-stage="group">
@@ -821,6 +824,13 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
     </div>
     <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.resetPreview()">Сбросить предпросмотр</button>
     <div class="admin-note">Чтобы выбранный этап увидели <b>все посетители сайта</b>, напишите в чат с Claude: «переключи сайт на этап …» — публикация занимает пару минут.</div>
+    <div class="admin-more">
+      <h3 style="margin-bottom:14px">Жеребьёвка команд</h3>
+      <p style="margin-bottom:14px">Случайно распределяет все подтверждённые команды по группам и сразу показывает результат на странице «Участники» (в этом браузере).</p>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Провести жеребьёвку</button>
+      <div id="drawResult" class="draw-result"></div>
+      <div class="admin-note" style="margin-top:14px">Как и с этапами — результат виден только у вас. Понравился расклад? Напишите «зафиксируй жеребьёвку» — закреплю группы на сайте для всех.</div>
+    </div>
     <div class="admin-more">Скоро здесь появятся другие настройки управления сайтом.</div>
   </div>
 </div>
@@ -1154,11 +1164,25 @@ const ADMIN={
     localStorage.removeItem(STAGE_KEY);
     applyStage('group');
     if(typeof go==='function')go('teams');
+  },
+  drawGroups(){
+    const pool=TEAMS.filter(t=>t.st==='ok');
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+    const letters=['A','B','C','D'];
+    const size=Math.ceil(pool.length/letters.length);
+    pool.forEach((t,i)=>{t.g=letters[Math.floor(i/size)]});
+    const byGroup={};
+    letters.forEach(l=>byGroup[l]=[]);
+    pool.forEach(t=>byGroup[t.g].push(t.n));
+    document.getElementById('drawResult').innerHTML=letters.filter(l=>byGroup[l].length)
+      .map(l=>`<div class="draw-group"><b>Группа ${l}:</b>${byGroup[l].join(', ')}</div>`).join('');
+    const activeFilter=document.querySelector('.filter-btn.active');
+    renderTeams(activeFilter?activeFilter.dataset.g:'all');
   }
 };
 
 document.addEventListener('keydown',e=>{
-  if(e.ctrlKey&&e.shiftKey&&(e.key==='A'||e.key==='a')){
+  if(e.ctrlKey&&e.altKey&&(e.key==='k'||e.key==='K'||e.code==='KeyK')){
     e.preventDefault();
     if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();
   }
