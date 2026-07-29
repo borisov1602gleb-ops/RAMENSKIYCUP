@@ -245,6 +245,17 @@ main{padding-top:0}
 /* модалка состава команды */
 .team-modal-overlay{position:fixed;inset:0;z-index:15000;display:none;align-items:flex-start;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:6vh 20px;overflow-y:auto}
 .team-modal-overlay.open{display:flex}
+
+/* просмотр документа прямо на сайте (iframe) */
+.doc-viewer-overlay{position:fixed;inset:0;z-index:16000;display:none;flex-direction:column;background:rgba(1,3,20,.92);backdrop-filter:blur(6px)}
+.doc-viewer-overlay.open{display:flex}
+.dv-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--line-2);flex-shrink:0}
+.dv-bar .dv-title{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:.92rem;letter-spacing:.03em;color:var(--text)}
+.dv-close{width:38px;height:38px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:1rem;flex-shrink:0}
+.dv-close:hover{color:var(--text);border-color:var(--muted)}
+.dv-frame-wrap{flex:1;position:relative;background:#0b0d10}
+.dv-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.dv-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
 .team-modal{width:min(640px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;overflow:hidden}
 .tm-head{display:flex;align-items:center;gap:18px;padding:30px 32px;position:relative;background:var(--panel-2)}
 .tm-head .team-shield{width:56px;height:66px}
@@ -967,6 +978,18 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
   </div>
 </div>
 
+<!-- ПРОСМОТР ДОКУМЕНТА (iframe, без перехода со страницы) -->
+<div class="doc-viewer-overlay" id="docViewer">
+  <div class="dv-bar">
+    <span class="dv-title" id="dvTitle"></span>
+    <button class="dv-close" onclick="DOC_VIEWER.close()">✕</button>
+  </div>
+  <div class="dv-frame-wrap">
+    <div class="dv-loading" id="dvLoading">Загрузка…</div>
+    <iframe id="dvFrame" title="Документ"></iframe>
+  </div>
+</div>
+
 <!-- АДМИН-ПАНЕЛЬ: вход -->
 <div class="admin-overlay" id="adminLogin">
   <div class="admin-box">
@@ -1206,6 +1229,25 @@ const TEAM_MODAL={
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')TEAM_MODAL.close()});
 
+/* ПРОСМОТР ДОКУМЕНТА НА САЙТЕ (iframe, без перехода) */
+const DOC_VIEWER={
+  open(url,title){
+    const frame=document.getElementById('dvFrame');
+    document.getElementById('dvLoading').style.display='flex';
+    document.getElementById('dvTitle').textContent=title||'';
+    frame.onload=()=>{document.getElementById('dvLoading').style.display='none'};
+    frame.src=url;
+    document.getElementById('docViewer').classList.add('open');
+    document.body.style.overflow='hidden';
+  },
+  close(){
+    document.getElementById('docViewer').classList.remove('open');
+    document.getElementById('dvFrame').src='about:blank';
+    document.body.style.overflow='';
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')DOC_VIEWER.close()});
+
 function renderTeams(f='all'){
   const grid=document.getElementById('teamsGrid');
   const list=TEAMS.filter(t=>f==='all'||t.g===f);
@@ -1356,7 +1398,7 @@ document.getElementById('docsRoot').innerHTML=DOCS.map(cat=>`
         <div class="doc-info"><div class="t">${d.t}</div><div class="d">${d.d}</div></div>
         <div class="doc-toggle">+</div>
       </div>
-      <div class="doc-body"><div class="doc-body-inner"><p>${d.full}</p><div class="doc-actions"><a class="doc-btn dl" href="${d.url||'#'}" ${d.url?'download':'onclick="event.preventDefault()"'}>↓ Скачать ${d.ty.toUpperCase()}</a><a class="doc-btn op" href="${d.url||'#'}" ${d.url?'target="_blank" rel="noopener"':'onclick="event.preventDefault()"'}>Открыть онлайн</a></div></div></div>
+      <div class="doc-body"><div class="doc-body-inner"><p>${d.full}</p><div class="doc-actions"><a class="doc-btn dl" href="${d.url||'#'}" ${d.url?'download':'onclick="event.preventDefault()"'}>↓ Скачать ${d.ty.toUpperCase()}</a><a class="doc-btn op" href="${d.url||'#'}" onclick="${d.url?`event.preventDefault();DOC_VIEWER.open('${d.url}','${d.t.replace(/'/g,"\\'")}')`:'event.preventDefault()'}">Открыть онлайн</a></div></div></div>
     </div>`).join('')}</div></div>`).join('');
 
 /* ФИЛЬТР */
