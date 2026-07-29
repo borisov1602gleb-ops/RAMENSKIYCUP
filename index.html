@@ -475,9 +475,66 @@ body.loading .fsu{animation-play-state:paused}
 }
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}.reveal{opacity:1;transform:none;filter:none}.pin-wrap{height:auto}.pin-stage{position:static;height:auto}.grain{display:none}.preloader{display:none}}
+
+/* ===== ЭТАПЫ САЙТА (техработы / регистрация / групповой этап) ===== */
+body:not([data-stage="maintenance"]) #stage-maintenance{display:none}
+body:not([data-stage="registration"]) #stage-registration{display:none}
+body[data-stage="maintenance"] header,body[data-stage="maintenance"] main,body[data-stage="maintenance"] footer,body[data-stage="maintenance"] .to-top,
+body[data-stage="registration"] header,body[data-stage="registration"] main,body[data-stage="registration"] footer,body[data-stage="registration"] .to-top{display:none}
+
+.stage-screen{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 24px;overflow:hidden}
+.stage-inner{position:relative;z-index:2;max-width:640px;margin:0 auto}
+.stage-tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:22px}
+.stage-title{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(1.9rem,5.5vw,3.2rem);line-height:1.08;margin-bottom:18px}
+.stage-sub{color:var(--muted);font-size:1.05rem;line-height:1.7;max-width:480px;margin:0 auto 40px}
+
+/* мальчики пинают мяч */
+.kick-anim{position:relative;width:min(520px,88vw);height:150px;margin:0 auto 46px}
+.kid{position:absolute;bottom:0;width:56px;height:118px}
+.kid-a{left:6%}
+.kid-b{right:6%}
+.kid-head{width:30px;height:30px;border-radius:50%;background:var(--gold-lt);margin:0 auto;box-shadow:0 0 14px var(--gold-glow)}
+.kid-body{width:24px;height:50px;border-radius:9px;background:var(--emerald-lt);margin:4px auto 0}
+.kid-leg{width:9px;height:32px;background:var(--emerald-lt);border-radius:6px;margin:0 auto;transform-origin:top center;animation:legKick 4.8s ease-in-out infinite}
+.kid-b .kid-leg{animation-delay:2.4s}
+@keyframes legKick{0%,16%,100%{transform:rotate(0)}8%{transform:rotate(-32deg)}12%{transform:rotate(6deg)}}
+.kick-ball{position:absolute;bottom:14px;left:70px;font-size:2.2rem;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));animation:ballPass 4.8s ease-in-out infinite alternate}
+@keyframes ballPass{
+  0%{left:70px;bottom:14px;transform:rotate(0)}
+  8%{bottom:54px}
+  46%{left:calc(50% - 16px);bottom:64px;transform:rotate(180deg)}
+  54%{left:calc(50% + 16px);bottom:64px}
+  92%{bottom:54px}
+  100%{left:calc(100% - 90px);bottom:14px;transform:rotate(360deg)}
+}
+
+.reg-timer{display:flex;gap:14px;justify-content:center;margin-bottom:44px}
+.reg-cta{font-size:1.15rem;padding:20px 46px}
+
+/* ===== АДМИН-ПАНЕЛЬ ===== */
+.admin-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:20px}
+.admin-overlay.open{display:flex}
+.admin-box{width:min(420px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.admin-box.wide{width:min(560px,100%)}
+.admin-box h3{font-family:var(--f-head);text-transform:uppercase;font-size:1.05rem;letter-spacing:.06em;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between}
+.admin-box h3 button{font-size:.8rem;color:var(--muted);border:1px solid var(--line-2);border-radius:8px;padding:4px 10px}
+.admin-field{margin-bottom:14px}
+.admin-field label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.admin-field input{width:100%;background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.94rem}
+.admin-field input:focus{border-color:var(--emerald-lt)}
+.admin-err{color:var(--red);font-size:.82rem;margin:6px 0 4px;min-height:1em}
+.admin-submit{width:100%;margin-top:8px;justify-content:center}
+.admin-stage-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.admin-stage-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border:1px solid var(--line-2);border-radius:12px;font-weight:600;font-size:.92rem;text-align:left}
+.admin-stage-btn:hover{border-color:var(--muted)}
+.admin-stage-btn.active{border-color:var(--emerald-lt);background:rgba(47,160,108,.12);color:var(--emerald-lt)}
+.admin-stage-btn .k{font-family:var(--f-mono);font-size:.66rem;color:var(--muted);letter-spacing:.08em}
+.admin-note{font-size:.82rem;color:var(--muted);line-height:1.6;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.admin-note b{color:var(--text)}
+.admin-more{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;font-size:.82rem;color:var(--muted)}
 </style>
 </head>
-<body>
+<body data-stage="group">
 
 <div class="preloader" id="pre">
   <div class="pre-logo">РКЧ · 2025</div>
@@ -496,6 +553,36 @@ body.loading .fsu{animation-play-state:paused}
   <div class="blob blob-2" data-speed="0.1"></div>
   <div class="pitch-lines" data-speed="0.14"></div>
   <div class="vignette"></div>
+</div>
+
+<!-- ЭТАП 1: ТЕХНИЧЕСКИЕ РАБОТЫ -->
+<div class="stage-screen" id="stage-maintenance">
+  <div class="stage-inner">
+    <div class="stage-tag">РАМЕНСКИЙ КУБОК ЧЕМПИОНОВ</div>
+    <h1 class="stage-title">На сайте ведутся технические работы</h1>
+    <p class="stage-sub">Мы обновляем сайт турнира — скоро всё заработает. А пока команды продолжают тренироваться :)</p>
+    <div class="kick-anim">
+      <div class="kid kid-a"><div class="kid-head"></div><div class="kid-body"></div><div class="kid-leg"></div></div>
+      <div class="kid kid-b"><div class="kid-head"></div><div class="kid-body"></div><div class="kid-leg"></div></div>
+      <div class="kick-ball">⚽</div>
+    </div>
+  </div>
+</div>
+
+<!-- ЭТАП 2: РЕГИСТРАЦИЯ -->
+<div class="stage-screen" id="stage-registration">
+  <div class="stage-inner">
+    <div class="brand" style="justify-content:center;margin-bottom:26px"><div class="brand-mark"><svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg"><path d="M15 8 l1.6-3.4 1.9 2.6 1.5-3.2 1.5 3.2 1.9-2.6 1.6 3.4" fill="none" stroke="#FFD34D" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M10.5 9 C4.5 9.4 4.5 17.5 11.2 18.8" fill="none" stroke="#FFD34D" stroke-width="1.8" stroke-linecap="round"/><path d="M31.5 9 C37.5 9.4 37.5 17.5 30.8 18.8" fill="none" stroke="#FFD34D" stroke-width="1.8" stroke-linecap="round"/><path d="M12 8 H30 V13.5 A9 9 0 0 1 12 13.5 Z" fill="#0c0c0c" stroke="#FFD34D" stroke-width="1.3"/><rect x="19" y="22.5" width="4" height="6" fill="#0c0c0c" stroke="#FFD34D" stroke-width="1"/><rect x="13.5" y="28.5" width="15" height="3" rx="1.4" fill="#0c0c0c" stroke="#FFD34D" stroke-width="1"/></svg></div></div>
+    <div class="stage-tag">Регистрация команд открыта</div>
+    <h1 class="stage-title">До старта турнира</h1>
+    <div class="reg-timer">
+      <div class="seg"><span class="v" id="rt-d">00</span><span class="k">дней</span></div>
+      <div class="seg"><span class="v" id="rt-h">00</span><span class="k">часов</span></div>
+      <div class="seg"><span class="v" id="rt-m">00</span><span class="k">минут</span></div>
+      <div class="seg"><span class="v" id="rt-s">00</span><span class="k">секунд</span></div>
+    </div>
+    <button class="btn btn-emerald reg-cta" onclick="ADMIN.enterFromRegistration()">Зарегистрировать команду</button>
+  </div>
 </div>
 
 <header id="head">
@@ -709,6 +796,35 @@ body.loading .fsu{animation-play-state:paused}
 
 <button class="to-top" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+<!-- АДМИН-ПАНЕЛЬ: вход -->
+<div class="admin-overlay" id="adminLogin">
+  <div class="admin-box">
+    <h3>Вход в админ-панель<button onclick="ADMIN.closeLogin()">✕</button></h3>
+    <form onsubmit="return ADMIN.tryLogin(event)">
+      <div class="admin-field"><label>Логин</label><input type="text" id="adminUser" autocomplete="username" autofocus></div>
+      <div class="admin-field"><label>Пароль</label><input type="password" id="adminPass" autocomplete="current-password"></div>
+      <div class="admin-err" id="adminErr"></div>
+      <button type="submit" class="btn btn-emerald admin-submit">Войти</button>
+    </form>
+  </div>
+</div>
+
+<!-- АДМИН-ПАНЕЛЬ: консоль управления -->
+<div class="admin-overlay" id="adminConsole">
+  <div class="admin-box wide">
+    <h3>Консоль сайта<button onclick="ADMIN.closeConsole()">✕</button></h3>
+    <div class="admin-note">Сейчас показан <b id="adminPreviewLabel">—</b> (только в этом браузере, для предпросмотра). Опубликованный для всех этап: <b id="adminPublishedLabel">—</b>.</div>
+    <div class="admin-stage-list">
+      <button class="admin-stage-btn" data-stage-btn="maintenance" onclick="ADMIN.preview('maintenance')"><span>🛠 Технические работы</span><span class="k">ЭТАП 1</span></button>
+      <button class="admin-stage-btn" data-stage-btn="registration" onclick="ADMIN.preview('registration')"><span>📝 Регистрация команд</span><span class="k">ЭТАП 2</span></button>
+      <button class="admin-stage-btn" data-stage-btn="group" onclick="ADMIN.preview('group')"><span>⚽ Групповой этап (сайт)</span><span class="k">ЭТАП 3</span></button>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.resetPreview()">Сбросить предпросмотр</button>
+    <div class="admin-note">Чтобы выбранный этап увидели <b>все посетители сайта</b>, напишите в чат с Claude: «переключи сайт на этап …» — публикация занимает пару минут.</div>
+    <div class="admin-more">Скоро здесь появятся другие настройки управления сайтом.</div>
+  </div>
+</div>
+
 <script>
 /* ДАННЫЕ */
 const TEAMS=[
@@ -905,14 +1021,14 @@ function setOdo(el,val){
   const s=String(Math.max(0,val)).padStart(2,'0');
   el.querySelectorAll('.odo-strip').forEach((strip,i)=>{strip.style.transform=`translateY(${-(+s[i])}em)`});
 }
-['t-d','t-h','t-m','t-s'].forEach(id=>{const el=document.getElementById(id);if(el)makeOdo(el)});
+['t-d','t-h','t-m','t-s','rt-d','rt-h','rt-m','rt-s'].forEach(id=>{const el=document.getElementById(id);if(el)makeOdo(el)});
 function tickTimer(){
   const diff=START-new Date();
-  const D=document.getElementById('t-d');if(!D)return;
-  setOdo(D,Math.floor(diff/864e5));
-  setOdo(document.getElementById('t-h'),Math.floor(diff%864e5/36e5));
-  setOdo(document.getElementById('t-m'),Math.floor(diff%36e5/6e4));
-  setOdo(document.getElementById('t-s'),Math.floor(diff%6e4/1e3));
+  const D=document.getElementById('t-d');
+  const days=Math.floor(diff/864e5),hrs=Math.floor(diff%864e5/36e5),mins=Math.floor(diff%36e5/6e4),secs=Math.floor(diff%6e4/1e3);
+  if(D){setOdo(D,days);setOdo(document.getElementById('t-h'),hrs);setOdo(document.getElementById('t-m'),mins);setOdo(document.getElementById('t-s'),secs)}
+  const RD=document.getElementById('rt-d');
+  if(RD){setOdo(RD,days);setOdo(document.getElementById('rt-h'),hrs);setOdo(document.getElementById('rt-m'),mins);setOdo(document.getElementById('rt-s'),secs)}
 }
 setInterval(tickTimer,1000);tickTimer();
 
@@ -989,6 +1105,65 @@ renderTeams('all');onScroll();
     else{pre.classList.add('done');document.body.classList.remove('loading');setTimeout(()=>pre.remove(),800);initAll()}
   })(t0);
 })();
+
+/* ===== ЭТАПЫ САЙТА + АДМИН-ПАНЕЛЬ =====
+   PUBLISHED_STAGE — что видят ВСЕ посетители сайта. Чтобы опубликовать
+   другой этап для всех, значение нужно поменять и запросить публикацию —
+   переключение в панели ниже меняет вид только в текущем браузере (предпросмотр). */
+const PUBLISHED_STAGE='group';
+const STAGE_KEY='rkch_stage_preview';
+const ADMIN_SESSION_KEY='rkch_admin_ok';
+const ADMIN_USER='admin';
+const ADMIN_PASS='Ramensky2025';
+const STAGE_LABELS={maintenance:'Технические работы',registration:'Регистрация команд',group:'Групповой этап'};
+
+function applyStage(stage){document.body.setAttribute('data-stage',stage)}
+(function(){applyStage(localStorage.getItem(STAGE_KEY)||PUBLISHED_STAGE)})();
+
+const ADMIN={
+  openLogin(){
+    document.getElementById('adminErr').textContent='';
+    document.getElementById('adminLogin').classList.add('open');
+    setTimeout(()=>document.getElementById('adminUser').focus(),50);
+  },
+  closeLogin(){document.getElementById('adminLogin').classList.remove('open')},
+  tryLogin(e){
+    e.preventDefault();
+    const u=document.getElementById('adminUser').value.trim();
+    const p=document.getElementById('adminPass').value;
+    if(u===ADMIN_USER&&p===ADMIN_PASS){
+      sessionStorage.setItem(ADMIN_SESSION_KEY,'1');
+      this.closeLogin();
+      this.openConsole();
+    }else{
+      document.getElementById('adminErr').textContent='Неверный логин или пароль';
+    }
+    return false;
+  },
+  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole()},
+  closeConsole(){document.getElementById('adminConsole').classList.remove('open')},
+  refreshConsole(){
+    const current=document.body.getAttribute('data-stage');
+    document.getElementById('adminPreviewLabel').textContent=STAGE_LABELS[current]||current;
+    document.getElementById('adminPublishedLabel').textContent=STAGE_LABELS[PUBLISHED_STAGE];
+    document.querySelectorAll('[data-stage-btn]').forEach(b=>b.classList.toggle('active',b.dataset.stageBtn===current));
+  },
+  preview(stage){localStorage.setItem(STAGE_KEY,stage);applyStage(stage);this.refreshConsole()},
+  resetPreview(){localStorage.removeItem(STAGE_KEY);applyStage(PUBLISHED_STAGE);this.refreshConsole()},
+  enterFromRegistration(){
+    localStorage.removeItem(STAGE_KEY);
+    applyStage('group');
+    if(typeof go==='function')go('teams');
+  }
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.shiftKey&&(e.key==='A'||e.key==='a')){
+    e.preventDefault();
+    if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();
+  }
+  if(e.key==='Escape'){ADMIN.closeLogin();ADMIN.closeConsole()}
+});
 </script>
 </body>
 </html>
