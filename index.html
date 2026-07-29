@@ -512,9 +512,9 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
 .reg-cta{font-size:1.15rem;padding:20px 46px}
 
 /* ===== АДМИН-ПАНЕЛЬ ===== */
-.admin-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:20px}
+.admin-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-start;justify-content:center;background:rgba(1,3,20,.72);backdrop-filter:blur(6px);padding:20px;overflow-y:auto}
 .admin-overlay.open{display:flex}
-.admin-box{width:min(420px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.admin-box{width:min(420px,100%);max-width:100%;background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;box-sizing:border-box}
 .admin-box.wide{width:min(560px,100%)}
 .admin-box h3{font-family:var(--f-head);text-transform:uppercase;font-size:1.05rem;letter-spacing:.06em;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between}
 .admin-box h3 button{font-size:.8rem;color:var(--muted);border:1px solid var(--line-2);border-radius:8px;padding:4px 10px}
@@ -596,11 +596,11 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
         <li><a href="#" data-v="home" class="active" onclick="go('home',event)">Главная</a></li>
         <li><a href="#" data-v="teams" onclick="go('teams',event)">Участники</a></li>
         <li><a href="#" data-v="docs" onclick="go('docs',event)">Документы</a></li>
-        <li class="menu-cta-wrap"><a class="menu-cta" href="#" onclick="go('teams',event)">Подать заявку</a></li>
+        <li class="menu-cta-wrap"><a class="menu-cta" id="menuCta" href="#" onclick="return ADMIN.regCtaClick(event)">Подать заявку</a></li>
       </ul>
     </div>
     <div class="nav-right">
-      <a class="nav-cta" href="#" onclick="go('teams',event)">Подать заявку</a>
+      <a class="nav-cta" id="navCta" href="#" onclick="return ADMIN.regCtaClick(event)">Подать заявку</a>
       <button class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -614,11 +614,11 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
     <div class="hero-veil"></div>
     <div class="container wide hero-flex">
       <div>
-        <div class="hero-badge fsu" style="animation-delay:.2s">Дворовой турнир 8×8 · Раменское · Сезон 2025</div>
+        <div class="hero-badge fsu" id="heroBadge" style="animation-delay:.2s">Дворовой турнир 8×8 · Раменское · Сезон 2025</div>
         <h1 class="fsu" style="animation-delay:.4s">Улица играет.<br>Город смотрит.<br>Чемпион — <em class="serif">один</em>.</h1>
       </div>
       <div>
-        <p class="hero-sub fsu" style="animation-delay:.7s">Раменский Кубок Чемпионов — турнир, где дворовой футбол доведён до совершенства: групповой этап, плей-офф и один трофей на шестнадцать команд.</p>
+        <p class="hero-sub fsu" id="heroSub" style="animation-delay:.7s">Раменский Кубок Чемпионов — турнир, где дворовой футбол доведён до совершенства: групповой этап, плей-офф и один трофей на шестнадцать команд.</p>
         <a class="btn-white fsu" style="animation-delay:.9s" href="#" onclick="go('teams',event)">Смотреть участников <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
       </div>
     </div>
@@ -651,7 +651,7 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
           <div class="ico">🏆</div>
         </div>
         <div class="b spot"><div class="ico">⚽</div><div><h3>Формат 7+1</h3><p>8×8, искусственный газон</p></div></div>
-        <div class="b spot"><div class="big">₽300K</div><div><h3>Призовой фонд</h3></div></div>
+        <div class="b spot"><div class="big" id="prizeFundBig">₽300K</div><div><h3>Призовой фонд</h3></div></div>
         <div class="b b-wide b-photo spot">
           <img src="https://images.unsplash.com/photo-1526232761682-d26e03ac148e?q=70&w=1000&auto=format&fit=crop" alt="Дворовой футбол" loading="lazy" onerror="this.style.display='none'">
           <div class="bp-cap"><h3>3 поля · стадион «Сатурн»</h3><p>Матчи по выходным, апрель — июнь 2025</p></div>
@@ -790,7 +790,7 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
         <div class="socials"><a href="#">VK</a><a href="#">TG</a><a href="#">YT</a></div>
       </div>
       <div><h4>Разделы</h4><ul><li><a href="#" onclick="go('home',event)">Главная</a></li><li><a href="#" onclick="go('teams',event)">Участники</a></li><li><a href="#" onclick="go('docs',event)">Документы</a></li></ul></div>
-      <div><h4>Контакты</h4><ul><li>г. Раменское, стадион «Сатурн»</li><li class="mono">+7 (496) 000-00-00</li><li class="mono">cup@ramenskoe-football.ru</li><li>Чат: <a href="#" class="emerald">@ramkubok</a></li></ul></div>
+      <div><h4>Контакты</h4><ul><li>г. Раменское, стадион «Сатурн»</li><li class="mono" id="contactPhone">+7 (496) 000-00-00</li><li class="mono" id="contactEmail">cup@ramenskoe-football.ru</li><li>Чат: <a href="#" class="emerald">@ramkubok</a></li></ul></div>
     </div>
     <div class="foot-word">Раменский<br>Кубок</div>
     <div class="copyright">© 2025 РАМЕНСКИЙ КУБОК ЧЕМПИОНОВ · Все права защищены</div>
@@ -830,6 +830,20 @@ body[data-stage="registration"] header,body[data-stage="registration"] main,body
       <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Провести жеребьёвку</button>
       <div id="drawResult" class="draw-result"></div>
       <div class="admin-note" style="margin-top:14px">Как и с этапами — результат виден только у вас. Понравился расклад? Напишите «зафиксируй жеребьёвку» — закреплю группы на сайте для всех.</div>
+    </div>
+    <div class="admin-more">
+      <h3 style="margin-bottom:14px">Гибкие настройки сайта</h3>
+      <div class="admin-field"><label>Дата и время старта турнира (для отсчёта)</label><input type="datetime-local" id="setStart"></div>
+      <div class="admin-field"><label>Телефон оргкомитета</label><input type="text" id="setPhone"></div>
+      <div class="admin-field"><label>Email оргкомитета</label><input type="text" id="setEmail"></div>
+      <div class="admin-field"><label>Призовой фонд (текст на главной)</label><input type="text" id="setPrize"></div>
+      <div class="admin-field"><label>Текст-бейдж над заголовком главной</label><input type="text" id="setBadge"></div>
+      <div class="admin-field"><label>Подзаголовок под главным заголовком</label><input type="text" id="setSub"></div>
+      <div class="admin-field"><label>Регистрация команд</label>
+        <button class="admin-stage-btn" id="regToggleBtn" style="width:100%" onclick="ADMIN.toggleRegistration()"></button>
+      </div>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.applySettings()">Применить (предпросмотр)</button>
+      <div class="admin-note">Изменения видны только у вас. Устроило? Напишите «опубликуй настройки» — закреплю для всех посетителей.</div>
     </div>
     <div class="admin-more">Скоро здесь появятся другие настройки управления сайтом.</div>
   </div>
@@ -1022,7 +1036,7 @@ function startCounters(){
 }
 
 /* ОТСЧЁТ + ТАБЛО-ОДОМЕТР */
-const START=new Date('2025-04-12T12:00:00');
+let START=new Date('2025-04-12T12:00:00');
 function makeOdo(el){
   const digit=`<span class="odo"><span class="odo-strip">${[0,1,2,3,4,5,6,7,8,9].map(n=>`<span>${n}</span>`).join('')}</span></span>`;
   el.innerHTML=digit+digit;
@@ -1130,6 +1144,39 @@ const STAGE_LABELS={maintenance:'Технические работы',registrati
 function applyStage(stage){document.body.setAttribute('data-stage',stage)}
 (function(){applyStage(localStorage.getItem(STAGE_KEY)||PUBLISHED_STAGE)})();
 
+/* ГИБКИЕ НАСТРОЙКИ САЙТА */
+const SETTINGS_KEY='rkch_settings_preview';
+const DEFAULT_SETTINGS={
+  startISO:'2025-04-12T12:00',
+  phone:'+7 (496) 000-00-00',
+  email:'cup@ramenskoe-football.ru',
+  prize:'₽300K',
+  badge:'Дворовой турнир 8×8 · Раменское · Сезон 2025',
+  sub:'Раменский Кубок Чемпионов — турнир, где дворовой футбол доведён до совершенства: групповой этап, плей-офф и один трофей на шестнадцать команд.',
+  regOpen:true
+};
+function getSettings(){
+  try{return Object.assign({},DEFAULT_SETTINGS,JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}'))}
+  catch(e){return Object.assign({},DEFAULT_SETTINGS)}
+}
+function setRegistrationUI(open){
+  [document.getElementById('navCta'),document.getElementById('menuCta')].forEach(a=>{
+    if(!a)return;
+    a.textContent=open?'Подать заявку':'Регистрация закрыта';
+    a.style.opacity=open?'':'.5';
+  });
+}
+function applySettingsToDom(s){
+  const bd=document.getElementById('heroBadge');if(bd)bd.textContent=s.badge;
+  const sb=document.getElementById('heroSub');if(sb)sb.textContent=s.sub;
+  const pf=document.getElementById('prizeFundBig');if(pf)pf.textContent=s.prize;
+  const ph=document.getElementById('contactPhone');if(ph)ph.textContent=s.phone;
+  const em=document.getElementById('contactEmail');if(em)em.textContent=s.email;
+  if(s.startISO){START=new Date(s.startISO);if(typeof tickTimer==='function')tickTimer()}
+  setRegistrationUI(s.regOpen);
+}
+(function(){applySettingsToDom(getSettings())})();
+
 const ADMIN={
   openLogin(){
     document.getElementById('adminErr').textContent='';
@@ -1150,7 +1197,7 @@ const ADMIN={
     }
     return false;
   },
-  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole()},
+  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm()},
   closeConsole(){document.getElementById('adminConsole').classList.remove('open')},
   refreshConsole(){
     const current=document.body.getAttribute('data-stage');
@@ -1178,6 +1225,41 @@ const ADMIN={
       .map(l=>`<div class="draw-group"><b>Группа ${l}:</b>${byGroup[l].join(', ')}</div>`).join('');
     const activeFilter=document.querySelector('.filter-btn.active');
     renderTeams(activeFilter?activeFilter.dataset.g:'all');
+  },
+  refreshSettingsForm(){
+    const s=getSettings();
+    const map={setStart:s.startISO,setPhone:s.phone,setEmail:s.email,setPrize:s.prize,setBadge:s.badge,setSub:s.sub};
+    Object.keys(map).forEach(id=>{const el=document.getElementById(id);if(el)el.value=map[id]});
+    const btn=document.getElementById('regToggleBtn');
+    if(btn){
+      btn.textContent=s.regOpen?'✅ Регистрация открыта — нажмите, чтобы закрыть':'⛔ Регистрация закрыта — нажмите, чтобы открыть';
+      btn.classList.toggle('active',s.regOpen);
+    }
+  },
+  applySettings(){
+    const s=getSettings();
+    s.startISO=document.getElementById('setStart').value||s.startISO;
+    s.phone=document.getElementById('setPhone').value||s.phone;
+    s.email=document.getElementById('setEmail').value||s.email;
+    s.prize=document.getElementById('setPrize').value||s.prize;
+    s.badge=document.getElementById('setBadge').value||s.badge;
+    s.sub=document.getElementById('setSub').value||s.sub;
+    localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+    applySettingsToDom(s);
+    this.refreshSettingsForm();
+  },
+  toggleRegistration(){
+    const s=getSettings();
+    s.regOpen=!s.regOpen;
+    localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+    applySettingsToDom(s);
+    this.refreshSettingsForm();
+  },
+  regCtaClick(e){
+    const s=getSettings();
+    if(!s.regOpen){if(e)e.preventDefault();return false}
+    go('teams',e);
+    return false;
   }
 };
 
