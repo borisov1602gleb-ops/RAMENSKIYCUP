@@ -268,6 +268,28 @@ main{padding-top:0}
 .dv-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .dv-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
 
+/* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ */
+.dc-wrap{flex:1;overflow-y:auto;padding:36px;max-width:1200px;margin:0 auto;width:100%}
+.dc-intro{text-align:center;color:var(--muted);max-width:560px;margin:0 auto 30px;font-size:.95rem;line-height:1.6}
+.dc-start-btn{display:block;margin:0 auto 40px;font-size:1.05rem;padding:16px 44px}
+.dc-pots{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:44px}
+.dc-pot{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+.dc-pot h4{font-family:var(--f-head);text-transform:uppercase;font-size:.85rem;letter-spacing:.04em;color:var(--gold-lt);margin-bottom:14px;display:flex;justify-content:space-between}
+.dc-pot-cards{display:flex;flex-wrap:wrap;gap:10px;min-height:56px}
+.dc-card{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;padding:7px 12px;font-size:.8rem;transition:opacity .35s ease,transform .35s ease}
+.dc-card .dc-shield{width:22px;height:26px;flex:none}
+.dc-card .dc-shield svg{width:100%;height:100%}
+.dc-card.dc-leaving{opacity:0;transform:scale(.4) translateY(-14px)}
+.dc-groups{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.dc-group{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;min-height:120px}
+.dc-group h4{font-family:var(--f-head);text-transform:uppercase;font-size:.9rem;color:var(--emerald-lt);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.dc-group .glet{width:26px;height:26px;border-radius:50%;background:var(--emerald-glow);color:var(--emerald-lt);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800}
+.dc-group-list{display:flex;flex-direction:column;gap:8px}
+.dc-slot-card{display:flex;align-items:center;gap:9px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;font-size:.85rem;opacity:0;transform:translateY(-10px) scale(.9);animation:dcDrop .45s ease forwards}
+@keyframes dcDrop{to{opacity:1;transform:none}}
+.dc-done{text-align:center;margin-top:32px;color:var(--emerald-lt);font-family:var(--f-head);text-transform:uppercase;letter-spacing:.05em;font-size:1rem;opacity:0;animation:dcDrop .5s ease forwards}
+.dc-empty,.dc-error{text-align:center;color:var(--muted);padding:60px 20px}
+
 /* КАРТОЧКА МАТЧА */
 .match-modal .team-modal{width:min(760px,100%)}
 .mm-head{display:flex;align-items:center;justify-content:space-between;padding:26px 32px;position:relative;background:var(--panel-2)}
@@ -1183,6 +1205,15 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
   </div>
 </div>
 
+<!-- ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ -->
+<div class="doc-viewer-overlay dc-overlay" id="drawCeremony">
+  <div class="dv-bar">
+    <span class="dv-title">🎲 Жеребьёвка турнира</span>
+    <button class="dv-close" onclick="DRAW_CEREMONY.close()">✕</button>
+  </div>
+  <div class="dc-wrap" id="dcWrap"></div>
+</div>
+
 <!-- КАРТОЧКА МАТЧА -->
 <div class="team-modal-overlay match-modal" id="matchModal" onclick="if(event.target===this)MATCH_MODAL.close()">
   <div class="team-modal">
@@ -1252,10 +1283,11 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
         <div class="ad-pane" data-pane="draw">
           <h4>Жеребьёвка команд</h4>
-          <p style="margin-bottom:14px;color:var(--muted)">Случайно распределяет все подтверждённые команды по группам и сразу показывает результат на странице «Участники» (в этом браузере).</p>
-          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Провести жеребьёвку</button>
+          <p style="margin-bottom:14px;color:var(--muted)">Случайно распределяет подтверждённые (боте одобренные) команды по группам — по 4 команды на группу: 4 команды → 1 группа, 8 → 2, 12 → 3, 16 → 4. Нужно минимум 4 команды.</p>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:10px" onclick="DRAW_CEREMONY.open()">🎬 Открыть церемонию жеребьёвки</button>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Быстрая жеребьёвка (текстом)</button>
           <div id="drawResult" class="draw-result"></div>
-          <div class="admin-note" style="margin-top:14px">Как и с этапами — результат виден только у вас. Понравился расклад? Напишите «зафиксируй жеребьёвку» — закреплю группы на сайте для всех.</div>
+          <div class="admin-note" style="margin-top:14px">Это предпросмотр (виден только у вас, каждый раз новый случайный расклад). Понравился вариант? Напишите «зафиксируй жеребьёвку» — закреплю именно эти группы на сайте для всех.</div>
         </div>
 
         <div class="ad-pane" data-pane="results">
@@ -1771,6 +1803,84 @@ function renderAwaitingDraw(list){
 }
 loadRegisteredTeams().then(list=>{renderRegistrations(list);renderAwaitingDraw(list)});
 
+/* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ: две корзины (нечётные/чётные по номеру заявки) + анимированная раскладка по группам */
+const DRAW_CEREMONY={
+  _cardHTML(t){
+    return `<div class="dc-card" data-id="${t.id}"><span class="dc-shield">${shieldSVG(hashColor(t.name),sid++)}</span>${t.name}</div>`;
+  },
+  async open(){
+    const el=document.getElementById('drawCeremony');
+    el.classList.add('open');
+    document.body.style.overflow='hidden';
+    const wrap=document.getElementById('dcWrap');
+    wrap.innerHTML='<div class="dc-empty">Загружаю команды…</div>';
+    const list=await loadRegisteredTeams();
+    const pool=(list||[]).slice();
+    if(pool.length<4){
+      wrap.innerHTML=`<div class="dc-error">Нужно минимум 4 подтверждённые команды для жеребьёвки. Сейчас зарегистрировано: ${pool.length}.</div>`;
+      return;
+    }
+    if(pool.length>16){
+      wrap.innerHTML=`<div class="dc-error">Сейчас зарегистрировано ${pool.length} команд — максимум для жеребьёвки 16.</div>`;
+      return;
+    }
+    this.numGroups=Math.ceil(pool.length/4);
+    this.letters=['A','B','C','D'].slice(0,this.numGroups);
+    const shuffle=arr=>{for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr};
+    this.potA=shuffle(pool.filter((_,i)=>i%2===0));
+    this.potB=shuffle(pool.filter((_,i)=>i%2===1));
+    this.groupAssign={};this.letters.forEach(l=>this.groupAssign[l]=[]);
+    this.nextGroupIdx=0;
+    wrap.innerHTML=`
+      <p class="dc-intro">${pool.length} команд разложены на две корзины по номеру заявки. Нажмите «Начать жеребьёвку» — команды по очереди попадут в ${this.numGroups} ${this.numGroups===1?'группу':'группы'}.</p>
+      <button class="btn btn-emerald dc-start-btn" id="dcStartBtn" onclick="DRAW_CEREMONY.start()">🎲 Начать жеребьёвку</button>
+      <div class="dc-pots">
+        <div class="dc-pot"><h4>Корзина 1 · нечётные<span id="dcPotACount">${this.potA.length}</span></h4><div class="dc-pot-cards" id="dcPotA">${this.potA.map(t=>this._cardHTML(t)).join('')}</div></div>
+        <div class="dc-pot"><h4>Корзина 2 · чётные<span id="dcPotBCount">${this.potB.length}</span></h4><div class="dc-pot-cards" id="dcPotB">${this.potB.map(t=>this._cardHTML(t)).join('')}</div></div>
+      </div>
+      <div class="dc-groups" id="dcGroups">${this.letters.map(l=>`
+        <div class="dc-group"><h4><span class="glet">${l}</span>Группа ${l}</h4><div class="dc-group-list" id="dcGroup${l}"></div></div>`).join('')}</div>`;
+  },
+  close(){
+    document.getElementById('drawCeremony').classList.remove('open');
+    document.body.style.overflow='';
+  },
+  async start(){
+    const btn=document.getElementById('dcStartBtn');
+    if(btn){btn.disabled=true;btn.textContent='Жеребьёвка идёт…'}
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    let turn=0;
+    while(this.potA.length||this.potB.length){
+      let pot=turn%2===0?this.potA:this.potB;
+      if(!pot.length)pot=turn%2===0?this.potB:this.potA;
+      const team=pot.shift();
+      turn++;
+      const cardEl=document.querySelector(`.dc-card[data-id="${team.id}"]`);
+      if(cardEl)cardEl.classList.add('dc-leaving');
+      const letter=this.letters[this.nextGroupIdx%this.letters.length];
+      this.nextGroupIdx++;
+      this.groupAssign[letter].push(team);
+      await wait(300);
+      const groupList=document.getElementById('dcGroup'+letter);
+      if(groupList){
+        const card=document.createElement('div');
+        card.className='dc-slot-card';
+        card.innerHTML=`<span class="dc-shield">${shieldSVG(hashColor(team.name),sid++)}</span>${team.name}`;
+        groupList.appendChild(card);
+      }
+      const potACount=document.getElementById('dcPotACount');if(potACount)potACount.textContent=this.potA.length;
+      const potBCount=document.getElementById('dcPotBCount');if(potBCount)potBCount.textContent=this.potB.length;
+      await wait(300);
+    }
+    const wrap=document.getElementById('dcWrap');
+    const done=document.createElement('div');
+    done.className='dc-done';
+    done.textContent='🏁 Жеребьёвка завершена! Понравился расклад? Напишите «зафиксируй жеребьёвку» в чат.';
+    wrap.appendChild(done);
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')DRAW_CEREMONY.close()});
+
 /* БОМБАРДИРЫ */
 function renderScorers(){
   const el=document.getElementById('scorersBody');if(!el)return;
@@ -2136,19 +2246,26 @@ const ADMIN={
   enterFromRegistration(){
     REG_WIZARD.open();
   },
-  drawGroups(){
-    const pool=TEAMS.filter(t=>t.st==='ok');
+  async drawGroups(){
+    const el=document.getElementById('drawResult');
+    el.innerHTML='Загружаю список зарегистрированных команд…';
+    const list=await loadRegisteredTeams();
+    const pool=(list||[]).slice();
+    if(pool.length<4){
+      el.innerHTML=`<div class="draw-group">Нужно минимум 4 подтверждённые команды для жеребьёвки. Сейчас зарегистрировано: ${pool.length}.</div>`;
+      return;
+    }
+    if(pool.length>16){
+      el.innerHTML=`<div class="draw-group">Сейчас зарегистрировано ${pool.length} команд — максимум для жеребьёвки 16. Отклоните лишние заявки боту (команда /teams и /remove) или дождитесь закрытия регистрации.</div>`;
+      return;
+    }
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
-    const letters=['A','B','C','D'];
-    const size=Math.ceil(pool.length/letters.length);
-    pool.forEach((t,i)=>{t.g=letters[Math.floor(i/size)]});
-    const byGroup={};
-    letters.forEach(l=>byGroup[l]=[]);
-    pool.forEach(t=>byGroup[t.g].push(t.n));
-    document.getElementById('drawResult').innerHTML=letters.filter(l=>byGroup[l].length)
-      .map(l=>`<div class="draw-group"><b>Группа ${l}:</b>${byGroup[l].join(', ')}</div>`).join('');
-    const activeFilter=document.querySelector('.filter-btn.active');
-    renderTeams(activeFilter?activeFilter.dataset.g:'all');
+    const numGroups=Math.ceil(pool.length/4);
+    const letters=['A','B','C','D'].slice(0,numGroups);
+    const byGroup={};letters.forEach(l=>byGroup[l]=[]);
+    pool.forEach((t,i)=>{byGroup[letters[i%numGroups]].push(t.name)});
+    el.innerHTML=`<div class="admin-note" style="margin-bottom:10px">${pool.length} команд → ${numGroups} ${numGroups===1?'группа':'группы'}</div>`+
+      letters.map(l=>`<div class="draw-group"><b>Группа ${l}:</b>${byGroup[l].join(', ')}</div>`).join('');
   },
   refreshSettingsForm(){
     const s=getSettings();
