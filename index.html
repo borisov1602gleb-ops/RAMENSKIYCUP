@@ -194,7 +194,7 @@ main{padding-top:0}
 .seg .k{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:10px}
 
 .matches{display:flex;flex-direction:column;gap:14px}
-.match-row{display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 26px;transition:all .35s var(--ease)}
+.match-row{display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 26px;transition:all .35s var(--ease);cursor:pointer}
 .match-row:hover{background:var(--panel-2);border-color:var(--emerald);transform:translateX(5px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .match-row .when{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);text-align:center;line-height:1.4}
 .match-row .tm{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:12px}
@@ -256,6 +256,43 @@ main{padding-top:0}
 .dv-frame-wrap{flex:1;position:relative;background:#0b0d10}
 .dv-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .dv-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
+
+/* КАРТОЧКА МАТЧА */
+.match-modal .team-modal{width:min(760px,100%)}
+.mm-head{display:flex;align-items:center;justify-content:space-between;padding:26px 32px;position:relative;background:var(--panel-2)}
+.mm-teams{display:flex;align-items:center;gap:18px;font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.05rem}
+.mm-teams .tm-a{text-align:right}
+.mm-score{font-family:var(--f-mono);font-weight:800;font-size:1.6rem;color:var(--gold-lt);background:#000;border:1px solid var(--line-2);border-radius:10px;padding:6px 16px;text-shadow:0 0 12px var(--gold-glow)}
+.mm-meta{font-family:var(--f-mono);font-size:.68rem;color:var(--muted);letter-spacing:.08em;margin-top:4px;text-align:center}
+.mm-mvp{position:absolute;top:-16px;left:24px;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#1a1408;font-weight:800;font-size:.78rem;padding:8px 16px;border-radius:var(--shape-full);box-shadow:0 8px 20px var(--gold-glow);white-space:nowrap}
+.mm-body{padding:32px}
+
+/* поле с составами */
+.pitch{position:relative;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#1c5b3a,#164a2f 50%,#1c5b3a);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.pitch::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 40px,transparent 40px 80px);pointer-events:none}
+.pitch-mid-wrap{position:relative;height:56px;flex-shrink:0}
+.pitch-mid{position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(255,255,255,.4)}
+.pitch-circle{position:absolute;left:50%;top:50%;width:74px;height:74px;border:1px solid rgba(255,255,255,.4);border-radius:50%;transform:translate(-50%,-50%)}
+.pitch-box{position:relative;margin:0 auto;width:150px;height:22px;border:1px solid rgba(255,255,255,.35);flex-shrink:0}
+.pitch-box.top{border-top:none}
+.pitch-box.bot{border-bottom:none}
+.pitch-half{position:relative;display:flex;flex-direction:column;justify-content:space-around;gap:16px;padding:18px 10px;z-index:1;flex:1}
+.pitch-row{display:flex;justify-content:space-evenly;gap:6px}
+.pp{display:flex;flex-direction:column;align-items:center;gap:4px;width:64px}
+.pp .no{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-weight:800;font-size:.78rem;color:#fff;border:2px solid rgba(255,255,255,.85);box-shadow:0 3px 8px rgba(0,0,0,.4);flex-shrink:0}
+.pp .nm{font-size:.66rem;color:#fff;text-align:center;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* хронология */
+.mm-timeline-h{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:30px 0 14px;display:flex;align-items:center;gap:14px}
+.mm-timeline-h::after{content:'';flex:1;height:1px;background:var(--line)}
+.mm-timeline{display:flex;flex-direction:column;gap:2px}
+.mm-ev{display:flex;align-items:center;gap:14px;padding:10px 6px;border-bottom:1px solid var(--line);font-size:.88rem}
+.mm-ev .min{font-family:var(--f-mono);font-weight:800;color:var(--gold-lt);width:34px;flex-shrink:0}
+.mm-ev .ic{width:22px;text-align:center;flex-shrink:0}
+.mm-ev .side{width:6px;align-self:stretch;border-radius:3px;flex-shrink:0}
+.mm-ev .pl{flex:1}
+.mm-empty{color:var(--muted);font-size:.88rem;text-align:center;padding:20px 0}
+@media(max-width:640px){.pp{width:52px}.pp .nm{max-width:52px}.mm-teams{font-size:.85rem;gap:10px}.mm-score{font-size:1.2rem;padding:5px 12px}}
 .team-modal{width:min(640px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;overflow:hidden}
 .tm-head{display:flex;align-items:center;gap:18px;padding:30px 32px;position:relative;background:var(--panel-2)}
 .tm-head .team-shield{width:56px;height:66px}
@@ -638,7 +675,8 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 .admin-box h3 button{font-size:.8rem;color:var(--muted);border:1px solid var(--line-2);border-radius:8px;padding:4px 10px}
 .admin-field{margin-bottom:14px}
 .admin-field label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
-.admin-field input{width:100%;background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.94rem}
+.admin-field input,.admin-field select{width:100%;background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.94rem}
+.ed-match select{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.78rem;padding:7px 6px;flex-shrink:0}
 .admin-field input:focus{border-color:var(--emerald-lt)}
 .admin-err{color:var(--red);font-size:.82rem;margin:6px 0 4px;min-height:1em}
 .admin-submit{width:100%;margin-top:8px;justify-content:center}
@@ -990,6 +1028,14 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
   </div>
 </div>
 
+<!-- КАРТОЧКА МАТЧА -->
+<div class="team-modal-overlay match-modal" id="matchModal" onclick="if(event.target===this)MATCH_MODAL.close()">
+  <div class="team-modal">
+    <div class="mm-head" id="mmHead"></div>
+    <div class="mm-body" id="mmBody"></div>
+  </div>
+</div>
+
 <!-- АДМИН-ПАНЕЛЬ: вход -->
 <div class="admin-overlay" id="adminLogin">
   <div class="admin-box">
@@ -1031,6 +1077,14 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
       <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй результаты» — закреплю для всех.</div>
     </div>
     <div class="admin-more">
+      <h3 style="margin-bottom:14px">Матч-центр: MVP и хронология</h3>
+      <p style="margin-bottom:14px">Выберите сыгранный матч, укажите MVP и добавьте события (гол/карточка, минута, игрок) — появится в карточке матча на сайте (клик по любому матчу открывает её).</p>
+      <div class="admin-field"><label>Матч</label><select id="mcMatchSelect" onchange="ADMIN.renderMatchCenterEditor(this.value)"></select></div>
+      <div id="mcEditor"></div>
+      <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveMatchCenter()">Сохранить (предпросмотр)</button>
+      <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй MVP и хронологию» — закреплю для всех.</div>
+    </div>
+    <div class="admin-more">
       <h3 style="margin-bottom:14px">Бомбардиры</h3>
       <div id="scorersEditor"></div>
       <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px" onclick="ADMIN.addScorer()">+ Добавить игрока</button>
@@ -1070,22 +1124,22 @@ body[data-stage="playoff"] header,body[data-stage="playoff"] main,body[data-stag
 <script>
 /* ДАННЫЕ */
 const TEAMS=[
-  {n:"Двор №5",g:"A",c:"#2fa06c",st:"ok",cap:"А. Морозов",roster:[["9","Морозов А.","FWD"],["7","Титов К.","MID"],["4","Гусев Д.","DEF"],["1","Белов В.","GK"]]},
-  {n:"Атлетико Гжель",g:"A",c:"#e0b53f",st:"ok",cap:"Р. Шарипов",roster:[["10","Шарипов Р.","FWD"],["8","Крылов И.","MID"],["5","Носов П.","DEF"],["12","Ким А.","GK"]]},
-  {n:"Спартак-Быково",g:"A",c:"#e05a4a",st:"ok",cap:"Д. Волков",roster:[["11","Волков Д.","FWD"],["6","Зуев М.","MID"],["3","Лапин С.","DEF"],["2","Орлов Н.","GK"]]},
-  {n:"Заречье",g:"A",c:"#4a90d9",st:"wait",cap:"И. Седов",roster:[["7","Седов И.","FWD"],["9","Мамонтов А.","MID"],["4","Дроздов Е.","DEF"],["1","Чиж В.","GK"]]},
-  {n:"Родники Юнайтед",g:"B",c:"#9b59d0",st:"ok",cap:"К. Ефимов",roster:[["10","Ефимов К.","FWD"],["8","Панин Р.","MID"],["5","Быков Д.","DEF"],["11","Зотов А.","GK"]]},
-  {n:"Кратово Сити",g:"B",c:"#16a085",st:"ok",cap:"С. Рыбаков",roster:[["9","Рыбаков С.","FWD"],["7","Голубев И.","MID"],["6","Фомин Д.","DEF"],["3","Тарасов М.","GK"]]},
-  {n:"Ильинка",g:"B",c:"#e67e22",st:"ok",cap:"П. Жуков",roster:[["11","Жуков П.","FWD"],["4","Соколов А.","MID"],["8","Веселов К.","DEF"],["1","Груздев Н.","GK"]]},
-  {n:"Удельная",g:"B",c:"#27ae60",st:"wait",cap:"А. Логинов",roster:[["10","Логинов А.","FWD"],["5","Карпов И.","MID"],["7","Мельник Д.","DEF"],["2","Русин В.","GK"]]},
-  {n:"Донино Динамо",g:"C",c:"#5d6d7e",st:"ok",cap:"В. Щукин",roster:[["9","Щукин В.","FWD"],["8","Ларин П.","MID"],["4","Хохлов Е.","DEF"],["1","Юдин А.","GK"]]},
-  {n:"Софьино Юг",g:"C",c:"#d35400",st:"ok",cap:"Н. Ковалёв",roster:[["11","Ковалёв Н.","FWD"],["6","Дёмин Р.","MID"],["5","Савин И.","DEF"],["3","Абрамов Д.","GK"]]},
-  {n:"Чулково FC",g:"C",c:"#3498db",st:"ok",cap:"М. Терехов",roster:[["10","Терехов М.","FWD"],["7","Блинов А.","MID"],["8","Котов С.","DEF"],["12","Ершов В.","GK"]]},
-  {n:"Островцы",g:"C",c:"#e84393",st:"wait",cap:"Д. Соловьёв",roster:[["9","Соловьёв Д.","FWD"],["4","Гончар И.","MID"],["6","Пименов К.","DEF"],["1","Судаков Н.","GK"]]},
-  {n:"Верея Атлетик",g:"D",c:"#6c5ce7",st:"ok",cap:"А. Кузьмин",roster:[["11","Кузьмин А.","FWD"],["8","Родин П.","MID"],["5","Галкин Д.","DEF"],["2","Шилов В.","GK"]]},
-  {n:"Заворово",g:"D",c:"#00b894",st:"ok",cap:"И. Панфилов",roster:[["10","Панфилов И.","FWD"],["7","Дубов А.","MID"],["4","Лыков Е.","DEF"],["1","Зимин Н.","GK"]]},
-  {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С.","FWD"],["6","Быстров Р.","MID"],["8","Ушаков Д.","DEF"],["3","Гущин М.","GK"]]},
-  {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К.","FWD"],["5","Фадеев И.","MID"],["7","Осипов А.","DEF"],["2","Рогов В.","GK"]]},
+  {n:"Двор №5",g:"A",c:"#2fa06c",st:"ok",cap:"А. Морозов",roster:[["9","Морозов А.","FWD"],["7","Титов К.","MID"],["4","Гусев Д.","DEF"],["1","Белов В.","GK"],["13","Воронов Т.","DEF"],["14","Кисилёв Б.","DEF"],["15","Пахомов Э.","MID"],["16","Шевцов Г.","MID"]]},
+  {n:"Атлетико Гжель",g:"A",c:"#e0b53f",st:"ok",cap:"Р. Шарипов",roster:[["10","Шарипов Р.","FWD"],["8","Крылов И.","MID"],["5","Носов П.","DEF"],["12","Ким А.","GK"],["13","Малышев О.","DEF"],["14","Гаврилов Ю.","DEF"],["15","Комаров Л.","MID"],["16","Сорокин Ф.","MID"]]},
+  {n:"Спартак-Быково",g:"A",c:"#e05a4a",st:"ok",cap:"Д. Волков",roster:[["11","Волков Д.","FWD"],["6","Зуев М.","MID"],["3","Лапин С.","DEF"],["2","Орлов Н.","GK"],["13","Бахтин Р.","DEF"],["14","Полозов Д.","DEF"],["15","Аксёнов К.","MID"],["16","Мишин В.","MID"]]},
+  {n:"Заречье",g:"A",c:"#4a90d9",st:"wait",cap:"И. Седов",roster:[["7","Седов И.","FWD"],["9","Мамонтов А.","MID"],["4","Дроздов Е.","DEF"],["1","Чиж В.","GK"],["13","Дьячков С.","DEF"],["14","Кожевников М.","DEF"],["15","Плотников А.","MID"],["16","Быков Н.","MID"]]},
+  {n:"Родники Юнайтед",g:"B",c:"#9b59d0",st:"ok",cap:"К. Ефимов",roster:[["10","Ефимов К.","FWD"],["8","Панин Р.","MID"],["5","Быков Д.","DEF"],["11","Зотов А.","GK"],["13","Уваров И.","DEF"],["14","Скворцов П.","DEF"],["15","Родионов Е.","MID"],["16","Лёвин Х.","MID"]]},
+  {n:"Кратово Сити",g:"B",c:"#16a085",st:"ok",cap:"С. Рыбаков",roster:[["9","Рыбаков С.","FWD"],["7","Голубев И.","MID"],["6","Фомин Д.","DEF"],["3","Тарасов М.","GK"],["13","Журавлёв Т.","DEF"],["14","Пестов У.","DEF"],["15","Кириллов Ж.","MID"],["16","Чечёткин Я.","MID"]]},
+  {n:"Ильинка",g:"B",c:"#e67e22",st:"ok",cap:"П. Жуков",roster:[["11","Жуков П.","FWD"],["4","Соколов А.","MID"],["8","Веселов К.","DEF"],["1","Груздев Н.","GK"],["13","Овчинников З.","DEF"],["14","Раков Ч.","DEF"],["15","Сидоркин Щ.","MID"],["16","Прохоров Ы.","MID"]]},
+  {n:"Удельная",g:"B",c:"#27ae60",st:"wait",cap:"А. Логинов",roster:[["10","Логинов А.","FWD"],["5","Карпов И.","MID"],["7","Мельник Д.","DEF"],["2","Русин В.","GK"],["13","Гущин Э.","DEF"],["14","Митин Ю.","DEF"],["15","Тропин Б.","MID"],["16","Нестеров Г.","MID"]]},
+  {n:"Донино Динамо",g:"C",c:"#5d6d7e",st:"ok",cap:"В. Щукин",roster:[["9","Щукин В.","FWD"],["8","Ларин П.","MID"],["4","Хохлов Е.","DEF"],["1","Юдин А.","GK"],["13","Ямщиков О.","DEF"],["14","Клюев Л.","DEF"],["15","Веретенников Ф.","MID"],["16","Бирюков Р.","MID"]]},
+  {n:"Софьино Юг",g:"C",c:"#d35400",st:"ok",cap:"Н. Ковалёв",roster:[["11","Ковалёв Н.","FWD"],["6","Дёмин Р.","MID"],["5","Савин И.","DEF"],["3","Абрамов Д.","GK"],["13","Стрелков Д.","DEF"],["14","Захаркин К.","DEF"],["15","Люлин В.","MID"],["16","Костров С.","MID"]]},
+  {n:"Чулково FC",g:"C",c:"#3498db",st:"ok",cap:"М. Терехов",roster:[["10","Терехов М.","FWD"],["7","Блинов А.","MID"],["8","Котов С.","DEF"],["12","Ершов В.","GK"],["13","Марьин М.","DEF"],["14","Голиков А.","DEF"],["15","Тищенко Н.","MID"],["16","Дубинин И.","MID"]]},
+  {n:"Островцы",g:"C",c:"#e84393",st:"wait",cap:"Д. Соловьёв",roster:[["9","Соловьёв Д.","FWD"],["4","Гончар И.","MID"],["6","Пименов К.","DEF"],["1","Судаков Н.","GK"],["13","Крутов П.","DEF"],["14","Ощепков Е.","DEF"],["15","Валов Х.","MID"],["16","Гладков Т.","MID"]]},
+  {n:"Верея Атлетик",g:"D",c:"#6c5ce7",st:"ok",cap:"А. Кузьмин",roster:[["11","Кузьмин А.","FWD"],["8","Родин П.","MID"],["5","Галкин Д.","DEF"],["2","Шилов В.","GK"],["13","Бортников У.","DEF"],["14","Селифанов Ж.","DEF"],["15","Данилевский Я.","MID"],["16","Ерохин З.","MID"]]},
+  {n:"Заворово",g:"D",c:"#00b894",st:"ok",cap:"И. Панфилов",roster:[["10","Панфилов И.","FWD"],["7","Дубов А.","MID"],["4","Лыков Е.","DEF"],["1","Зимин Н.","GK"],["13","Батурин Ч.","DEF"],["14","Шершнёв Щ.","DEF"],["15","Юрьев Ы.","MID"],["16","Ослин Э.","MID"]]},
+  {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С.","FWD"],["6","Быстров Р.","MID"],["8","Ушаков Д.","DEF"],["3","Гущин М.","GK"],["13","Толстов Ю.","DEF"],["14","Абакумов Б.","DEF"],["15","Раевский Г.","MID"],["16","Хромов О.","MID"]]},
+  {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К.","FWD"],["5","Фадеев И.","MID"],["7","Осипов А.","DEF"],["2","Рогов В.","GK"],["13","Заикин Л.","DEF"],["14","Пыжов Ф.","DEF"],["15","Кудасов Р.","MID"],["16","Ветров Д.","MID"]]},
 ];
 const BRACKET=[
   {h:"1/4 финала",m:[[["Двор №5",3,1],["Заречье",1,0]],[["Кратово Сити",2,1],["Удельная",0,0]],[["Ильинка",1,0],["Спартак-Быково",2,1]],[["Родники Юн.",4,1],["Атлетико Гжель",2,0]]]},
@@ -1102,11 +1156,16 @@ const PLAYOFF_MATCHES=[
    и «ближайшие матчи» на главной считаются из счётов автоматически */
 const GROUP_MATCHES={
   A:[
-    {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",sc:"3 : 1"},
-    {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Заречье",ca:"#e05a4a",cb:"#4a90d9",f:"Поле 2",sc:"2 : 2"},
-    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",sc:"2 : 0"},
-    {d:"19 АПР",t:"13:30",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 2",sc:"3 : 1"},
-    {d:"26 АПР",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1",live:true},
+    {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",sc:"3 : 1",mvp:"Морозов А.",
+      events:[{min:8,type:"goal",team:"a",player:"Морозов А."},{min:23,type:"yellow",team:"b",player:"Крылов И."},{min:31,type:"goal",team:"b",player:"Шарипов Р."},{min:44,type:"goal",team:"a",player:"Титов К."},{min:47,type:"goal",team:"a",player:"Морозов А."}]},
+    {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Заречье",ca:"#e05a4a",cb:"#4a90d9",f:"Поле 2",sc:"2 : 2",mvp:"Седов И.",
+      events:[{min:5,type:"goal",team:"b",player:"Седов И."},{min:19,type:"goal",team:"a",player:"Волков Д."},{min:38,type:"yellow",team:"a",player:"Зуев М."},{min:41,type:"goal",team:"b",player:"Мамонтов А."},{min:49,type:"goal",team:"a",player:"Волков Д."}]},
+    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",sc:"2 : 0",mvp:"Белов В.",
+      events:[{min:14,type:"goal",team:"a",player:"Морозов А."},{min:36,type:"red",team:"b",player:"Лапин С."},{min:52,type:"goal",team:"a",player:"Титов К."}]},
+    {d:"19 АПР",t:"13:30",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 2",sc:"3 : 1",mvp:"Шарипов Р.",
+      events:[{min:6,type:"goal",team:"a",player:"Шарипов Р."},{min:22,type:"goal",team:"a",player:"Крылов И."},{min:40,type:"goal",team:"b",player:"Седов И."},{min:58,type:"goal",team:"a",player:"Шарипов Р."}]},
+    {d:"26 АПР",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1",live:true,
+      events:[{min:11,type:"goal",team:"a",player:"Титов К."},{min:27,type:"yellow",team:"b",player:"Дроздов Е."}]},
     {d:"26 АПР",t:"13:30",a:"Атлетико Гжель",b:"Спартак-Быково",ca:"#e0b53f",cb:"#e05a4a",f:"Поле 2"},
   ],
   B:[
@@ -1134,6 +1193,12 @@ const GROUP_MATCHES={
     {d:"27 АПР",t:"16:30",a:"Заворово",b:"Никоновское",ca:"#00b894",cb:"#fdcb6e",f:"Поле 2"},
   ],
 };
+Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach((m,i)=>{m.id=L+i}));
+PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
+function findMatchById(id){
+  for(const L of Object.keys(GROUP_MATCHES)){const f=GROUP_MATCHES[L].find(m=>m.id===id);if(f)return f}
+  return PLAYOFF_MATCHES.find(m=>m.id===id);
+}
 let SCORERS=[
   {n:"Морозов А.",team:"Двор №5",g:5},
   {n:"Ефимов К.",team:"Родники Юнайтед",g:4},
@@ -1248,6 +1313,55 @@ const DOC_VIEWER={
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')DOC_VIEWER.close()});
 
+/* КАРТОЧКА МАТЧА: состав на поле (7+1) + хронология + MVP */
+const POS_ROWS=['GK','DEF','MID','FWD'];
+function pitchRowsHTML(roster,color,reverse){
+  const by={GK:[],DEF:[],MID:[],FWD:[]};
+  (roster||[]).forEach(p=>{if(by[p[2]])by[p[2]].push(p)});
+  const order=reverse?[...POS_ROWS].reverse():POS_ROWS;
+  return order.map(pos=>`<div class="pitch-row">${by[pos].map(p=>`
+    <div class="pp"><span class="no" style="background:${color}">${p[0]}</span><span class="nm">${p[1]}</span></div>`).join('')}</div>`).join('');
+}
+const EVENT_ICON={goal:'⚽',yellow:'🟨',red:'🟥'};
+const MATCH_MODAL={
+  open(id){
+    const m=findMatchById(id);if(!m)return;
+    const ta=TEAMS.find(t=>t.n===m.a),tb=TEAMS.find(t=>t.n===m.b);
+    const s=parseScore(m.sc);
+    document.getElementById('mmHead').innerHTML=`
+      ${m.mvp?`<div class="mm-mvp">🏅 MVP: ${m.mvp}</div>`:''}
+      <button class="tm-close" onclick="MATCH_MODAL.close()">✕</button>
+      <div style="flex:1;text-align:center">
+        <div class="mm-teams" style="justify-content:center">
+          <span class="tm-a">${m.a}</span>
+          <span class="mm-score">${m.live?'🔴 LIVE':s?`${s[0]} : ${s[1]}`:'VS'}</span>
+          <span>${m.b}</span>
+        </div>
+        <div class="mm-meta">${m.d} · ${m.t} · ${m.f}</div>
+      </div>`;
+    const events=(m.events||[]).slice().sort((x,y)=>x.min-y.min);
+    document.getElementById('mmBody').innerHTML=`
+      <div class="pitch">
+        <div class="pitch-box top"></div>
+        <div class="pitch-half top">${pitchRowsHTML(ta&&ta.roster,ta?ta.c:'#666',false)}</div>
+        <div class="pitch-mid-wrap"><div class="pitch-mid"></div><div class="pitch-circle"></div></div>
+        <div class="pitch-half bot">${pitchRowsHTML(tb&&tb.roster,tb?tb.c:'#666',true)}</div>
+        <div class="pitch-box bot"></div>
+      </div>
+      <div class="mm-timeline-h">Хронология матча</div>
+      ${events.length?`<div class="mm-timeline">${events.map(e=>`
+        <div class="mm-ev"><span class="min">${e.min}'</span><span class="side" style="background:${e.team==='a'?(ta?ta.c:'#666'):(tb?tb.c:'#666')}"></span><span class="ic">${EVENT_ICON[e.type]||'•'}</span><span class="pl">${e.player}</span></div>`).join('')}</div>`
+        :'<div class="mm-empty">Матч ещё не сыгран — статистика появится после игры.</div>'}`;
+    document.getElementById('matchModal').classList.add('open');
+    document.body.style.overflow='hidden';
+  },
+  close(){
+    document.getElementById('matchModal').classList.remove('open');
+    document.body.style.overflow='';
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')MATCH_MODAL.close()});
+
 function renderTeams(f='all'){
   const grid=document.getElementById('teamsGrid');
   const list=TEAMS.filter(t=>f==='all'||t.g===f);
@@ -1278,7 +1392,7 @@ function matchRowHTML(m,revealCls){
     ?'<span class="live-badge"><span class="live-dot"></span>LIVE</span>'
     :(m.sc?`<div class="score-chip">${m.sc}</div>`:'<div class="score-chip vs">VS</div>');
   return `
-  <div class="match-row ${revealCls||''} spot ${m.live?'is-live':''}">
+  <div class="match-row ${revealCls||''} spot ${m.live?'is-live':''}" ${m.id?`onclick="MATCH_MODAL.open('${m.id}')"`:''}>
     <div class="when">${m.d}<br>${m.t}</div>
     <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a))}</div>
     ${mid}
@@ -1630,7 +1744,7 @@ const ADMIN={
     }
     return false;
   },
-  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor()},
+  openConsole(){document.getElementById('adminConsole').classList.add('open');this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor();this.renderMatchCenter()},
   closeConsole(){document.getElementById('adminConsole').classList.remove('open')},
   refreshConsole(){
     const current=document.body.getAttribute('data-stage');
@@ -1800,6 +1914,67 @@ const ADMIN={
     NEWS=NEWS.filter(n=>n.title.trim());
     localStorage.setItem('rkch_news_preview',JSON.stringify(NEWS));
     renderNews();this.renderNewsEditor();
+  },
+  renderMatchCenter(){
+    const sel=document.getElementById('mcMatchSelect');if(!sel)return;
+    const all=[];
+    Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach(m=>{if(m.sc||m.live)all.push(m)}));
+    PLAYOFF_MATCHES.forEach(m=>{if(m.sc||m.live)all.push(m)});
+    if(!all.length){sel.innerHTML='';document.getElementById('mcEditor').innerHTML='<div class="admin-note">Пока нет сыгранных матчей — появятся здесь, как только внесёте счёт.</div>';return}
+    sel.innerHTML=all.map(m=>`<option value="${m.id}">${m.a} — ${m.b} (${m.d})</option>`).join('');
+    this._mcId=sel.value;
+    this.renderMatchCenterEditor(this._mcId);
+  },
+  mcEventRowHTML(e,i){
+    return `<div class="ed-match">
+      <input type="number" min="0" max="90" value="${e.min}" data-ei="${i}" data-f="min" style="width:50px;flex:none">
+      <select data-ei="${i}" data-f="type">
+        <option value="goal" ${e.type==='goal'?'selected':''}>⚽ Гол</option>
+        <option value="yellow" ${e.type==='yellow'?'selected':''}>🟨 Жёлтая</option>
+        <option value="red" ${e.type==='red'?'selected':''}>🟥 Красная</option>
+      </select>
+      <select data-ei="${i}" data-f="team">
+        <option value="a" ${e.team==='a'?'selected':''}>Команда А</option>
+        <option value="b" ${e.team==='b'?'selected':''}>Команда Б</option>
+      </select>
+      <input type="text" value="${e.player||''}" placeholder="Игрок" data-ei="${i}" data-f="player" style="flex:1">
+      <button class="ed-del" onclick="ADMIN.delMcEvent(${i})">✕</button>
+    </div>`;
+  },
+  renderMatchCenterEditor(id){
+    const m=findMatchById(id);if(!m)return;
+    this._mcId=id;
+    const events=m.events||[];
+    document.getElementById('mcEditor').innerHTML=`
+      <div class="admin-field"><label>MVP матча</label><input type="text" id="mcMvp" value="${m.mvp||''}" placeholder="Имя игрока"></div>
+      <div id="mcEvents">${events.map((e,i)=>this.mcEventRowHTML(e,i)).join('')}</div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin:4px 0 12px" onclick="ADMIN.addMcEvent()">+ Добавить событие</button>`;
+  },
+  addMcEvent(){
+    const m=findMatchById(this._mcId);if(!m)return;
+    m.events=m.events||[];
+    m.events.push({min:0,type:'goal',team:'a',player:''});
+    this.renderMatchCenterEditor(this._mcId);
+  },
+  delMcEvent(i){
+    const m=findMatchById(this._mcId);if(!m)return;
+    m.events.splice(i,1);
+    this.renderMatchCenterEditor(this._mcId);
+  },
+  saveMatchCenter(){
+    const m=findMatchById(this._mcId);if(!m)return;
+    m.mvp=document.getElementById('mcMvp').value.trim()||null;
+    const rows={};
+    document.querySelectorAll('#mcEvents [data-ei]').forEach(el=>{
+      const i=el.dataset.ei;
+      rows[i]=rows[i]||{};
+      rows[i][el.dataset.f]=el.value;
+    });
+    m.events=Object.keys(rows).map(k=>rows[k]).map(r=>({min:parseInt(r.min,10)||0,type:r.type,team:r.team,player:(r.player||'').trim()})).filter(e=>e.player);
+    const dump=JSON.parse(localStorage.getItem('rkch_events_preview')||'{}');
+    dump[this._mcId]={mvp:m.mvp,events:m.events};
+    localStorage.setItem('rkch_events_preview',JSON.stringify(dump));
+    this.renderMatchCenterEditor(this._mcId);
   }
 };
 
@@ -1812,6 +1987,8 @@ const ADMIN={
     if(s)SCORERS=s;
     const n=JSON.parse(localStorage.getItem('rkch_news_preview')||'null');
     if(n)NEWS=n;
+    const ev=JSON.parse(localStorage.getItem('rkch_events_preview')||'null');
+    if(ev)Object.keys(ev).forEach(id=>{const m=findMatchById(id);if(m){m.mvp=ev[id].mvp;m.events=ev[id].events}});
     if(r||s||n){renderGroups();renderGroupResults();renderHomeMatches();renderScorers();renderNews()}
   }catch(e){}
 })();
