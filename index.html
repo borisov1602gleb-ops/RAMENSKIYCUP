@@ -1286,9 +1286,9 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <h4>Жеребьёвка команд</h4>
           <p style="margin-bottom:14px;color:var(--muted)">Случайно распределяет подтверждённые (боте одобренные) команды по группам — по 4 команды на группу: 4 команды → 1 группа, 8 → 2, 12 → 3, 16 → 4. Нужно минимум 4 команды.</p>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:10px" onclick="DRAW_CEREMONY.open()">🎬 Открыть церемонию жеребьёвки</button>
-          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Быстрая жеребьёвка (текстом)</button>
+          <div class="admin-note" style="margin-bottom:14px">По завершении церемонии группы публикуются на сайт автоматически — для всех посетителей, без чата.</div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="ADMIN.drawGroups()">🎲 Быстрый предпросмотр (текстом, без публикации)</button>
           <div id="drawResult" class="draw-result"></div>
-          <div class="admin-note" style="margin-top:14px">Это предпросмотр (виден только у вас, каждый раз новый случайный расклад). Понравился вариант? Напишите «зафиксируй жеребьёвку» — закреплю именно эти группы на сайте для всех.</div>
         </div>
 
         <div class="ad-pane" data-pane="results">
@@ -1470,7 +1470,7 @@ const TEAM_MODAL={
   openReg(id){
     const list=window.REGISTERED_TEAMS||[];
     const t=list.find(x=>x.id===id);if(!t)return;
-    this._paint({n:t.name,c:hashColor(t.name),logo:t.logo,cap:t.captain,roster:t.roster,groupLabel:'Ожидает жеребьёвки'});
+    this._paint({n:t.name,c:hashColor(t.name),logo:t.logo,cap:t.captain,roster:t.roster,groupLabel:t.group?`Группа ${t.group}`:'Ожидает жеребьёвки'});
   },
   close(){
     document.getElementById('teamModal').classList.remove('open');
@@ -1802,9 +1802,27 @@ function renderAwaitingDraw(list){
   wrap.style.display='';
   el.innerHTML=list.map(regTeamCardHTML).join('');
 }
-loadRegisteredTeams().then(list=>{renderRegistrations(list);renderAwaitingDraw(list)});
+loadRegisteredTeams().then(list=>{
+  renderRegistrations(list);
+  renderAwaitingDraw((list||[]).filter(t=>!t.group));
+  syncTeamsFromRegistrations(list);
+});
 
 /* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ: две корзины (нечётные/чётные по номеру заявки) + анимированная раскладка по группам */
+/* Адрес бэкенда бота (Vercel) — используется только для публикации жеребьёвки,
+   обычные посетители сайта его не вызывают. */
+const DRAW_API_BASE='https://ramenskiycup.vercel.app';
+function syncTeamsFromRegistrations(list){
+  const grouped=(list||[]).filter(t=>t.group);
+  TEAMS.length=0;
+  grouped.forEach(t=>{
+    TEAMS.push({n:t.name,g:t.group,c:hashColor(t.name),st:'ok',cap:t.captain,roster:t.roster,logo:t.logo});
+  });
+  const activeFilter=document.querySelector('.filter-btn.active');
+  if(document.getElementById('teamsGrid'))renderTeams(activeFilter?activeFilter.dataset.g:'all');
+  if(document.getElementById('groupsRoot'))renderGroups();
+  if(document.getElementById('groupResultsAll'))renderGroupResults();
+}
 const DRAW_CEREMONY={
   _cardHTML(t){
     return `<div class="dc-card" data-id="${t.id}"><span class="dc-shield">${shieldSVG(hashColor(t.name),sid++)}</span>${t.name}</div>`;
@@ -1877,8 +1895,29 @@ const DRAW_CEREMONY={
     const wrap=document.getElementById('dcWrap');
     const done=document.createElement('div');
     done.className='dc-done';
-    done.textContent='🏁 Жеребьёвка завершена! Понравился расклад? Напишите «зафиксируй жеребьёвку» в чат.';
+    done.textContent='Публикую результат на сайт…';
     wrap.appendChild(done);
+    const result=await this.publish();
+    if(result.ok){
+      done.textContent='🏁 Готово! Группы опубликованы — на сайте у всех обновится в течение минуты.';
+      syncTeamsFromRegistrations((await loadRegisteredTeams())||[]);
+    }else{
+      done.textContent='⚠️ Не получилось опубликовать автоматически ('+(result.error||'ошибка')+'). Напишите «зафиксируй жеребьёвку» в чат — сделаю вручную.';
+    }
+  },
+  async publish(){
+    const groups={};
+    this.letters.forEach(l=>{groups[l]=this.groupAssign[l].map(t=>t.id)});
+    try{
+      const r=await fetch(DRAW_API_BASE+'/api/draw',{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({secret:ADMIN_PASS,groups}),
+      });
+      return await r.json();
+    }catch(e){
+      return {ok:false,error:String(e&&e.message||e)};
+    }
   }
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')DRAW_CEREMONY.close()});

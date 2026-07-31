@@ -19,10 +19,7 @@ const POSITIONS = {
 };
 const REQUIRED_COUNTS = { GK: 1, DEF: 3, MID: 3, FWD: 1 };
 
-function env(name, fallback) {
-  const v = process.env[name];
-  return v === undefined || v === '' ? fallback : v;
-}
+const { env, ghGetFile, ghPutRaw, ghPutFile, loadJson, saveJson } = require('../lib/gh');
 
 async function tg(method, body) {
   const token = process.env.BOT_TOKEN;
@@ -31,39 +28,6 @@ async function tg(method, body) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return r.json();
-}
-
-async function ghGetFile(path) {
-  const repo = process.env.GH_REPO;
-  const branch = env('GH_BRANCH', 'main');
-  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
-    headers: {
-      authorization: `token ${process.env.GH_TOKEN}`,
-      accept: 'application/vnd.github+json',
-    },
-  });
-  if (r.status === 404) return { sha: null, json: null };
-  if (!r.ok) throw new Error(`GitHub GET ${path} failed: ${r.status} ${await r.text()}`);
-  const data = await r.json();
-  const content = Buffer.from(data.content, 'base64').toString('utf8');
-  return { sha: data.sha, json: JSON.parse(content) };
-}
-
-async function ghPutRaw(path, base64Content, sha, message) {
-  const repo = process.env.GH_REPO;
-  const branch = env('GH_BRANCH', 'main');
-  const body = { message, content: base64Content, branch };
-  if (sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    method: 'PUT',
-    headers: {
-      authorization: `token ${process.env.GH_TOKEN}`,
-      accept: 'application/vnd.github+json',
-    },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(`GitHub PUT ${path} failed: ${r.status} ${await r.text()}`);
   return r.json();
 }
 
@@ -84,40 +48,9 @@ async function tgDownloadPhoto(fileId) {
   return { buffer, ext };
 }
 
-async function ghPutFile(path, obj, sha, message) {
-  const repo = process.env.GH_REPO;
-  const branch = env('GH_BRANCH', 'main');
-  const body = {
-    message,
-    content: Buffer.from(JSON.stringify(obj, null, 2), 'utf8').toString('base64'),
-    branch,
-  };
-  if (sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    method: 'PUT',
-    headers: {
-      authorization: `token ${process.env.GH_TOKEN}`,
-      accept: 'application/vnd.github+json',
-    },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(`GitHub PUT ${path} failed: ${r.status} ${await r.text()}`);
-  return r.json();
-}
-
-async function loadJson(path, fallback) {
-  const { json } = await ghGetFile(path);
-  return json === null ? fallback : json;
-}
-
 async function getMaxTeams() {
   const cfg = await loadJson('data/bot-config.json', { maxTeams: DEFAULT_MAX_TEAMS });
   return cfg.maxTeams || DEFAULT_MAX_TEAMS;
-}
-
-async function saveJson(path, obj, message) {
-  const { sha } = await ghGetFile(path);
-  return ghPutFile(path, obj, sha, message);
 }
 
 function parseRoster(text) {
