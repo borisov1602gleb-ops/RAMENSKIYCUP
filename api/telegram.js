@@ -50,6 +50,40 @@ async function ghGetFile(path) {
   return { sha: data.sha, json: JSON.parse(content) };
 }
 
+async function ghPutRaw(path, base64Content, sha, message) {
+  const repo = process.env.GH_REPO;
+  const branch = env('GH_BRANCH', 'main');
+  const body = { message, content: base64Content, branch };
+  if (sha) body.sha = sha;
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      authorization: `token ${process.env.GH_TOKEN}`,
+      accept: 'application/vnd.github+json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`GitHub PUT ${path} failed: ${r.status} ${await r.text()}`);
+  return r.json();
+}
+
+async function ghUploadLogo(path, buffer, message) {
+  const { sha } = await ghGetFile(path);
+  return ghPutRaw(path, buffer.toString('base64'), sha, message);
+}
+
+async function tgDownloadPhoto(fileId) {
+  const token = process.env.BOT_TOKEN;
+  const info = await tg('getFile', { file_id: fileId });
+  if (!info.ok) throw new Error('getFile failed: ' + JSON.stringify(info));
+  const filePath = info.result.file_path;
+  const r = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+  if (!r.ok) throw new Error('file download failed: ' + r.status);
+  const ext = (filePath.split('.').pop() || 'jpg').toLowerCase();
+  const buffer = Buffer.from(await r.arrayBuffer());
+  return { buffer, ext };
+}
+
 async function ghPutFile(path, obj, sha, message) {
   const repo = process.env.GH_REPO;
   const branch = env('GH_BRANCH', 'main');
@@ -130,8 +164,9 @@ const STEP_PROMPTS = {
     '10 Олег Соколов MID',
     '11 Мороз Морозов FWD',
   ].join('\n'),
+  logo: 'Хотите добавить логотип команды? Пришлите фото прямо сюда, или напишите «пропустить».',
 };
-const STEP_ORDER = ['name', 'captain', 'phone', 'city', 'roster'];
+const STEP_ORDER = ['name', 'captain', 'phone', 'city', 'roster', 'logo'];
 
 function nextStep(step) {
   const i = STEP_ORDER.indexOf(step);
@@ -191,6 +226,41 @@ async function handleMessage(msg) {
     return;
   }
 
+  if (text === '/teams') {
+    const admin = await loadJson('data/admin.json', null);
+    if (!admin || admin.chatId !== chatId) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
+      return;
+    }
+    const approved = await loadJson('data/registrations.json', []);
+    if (!approved.length) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Пока нет подтверждённых команд.' });
+      return;
+    }
+    const list = approved.map((t, i) => `${i + 1}. ${t.name} (капитан: ${t.captain})`).join('\n');
+    await tg('sendMessage', { chat_id: chatId, text: `Подтверждённые команды (${approved.length}):\n\n${list}\n\nЧтобы удалить команду, напишите: /remove <номер>` });
+    return;
+  }
+
+  if (text.startsWith('/remove')) {
+    const admin = await loadJson('data/admin.json', null);
+    if (!admin || admin.chatId !== chatId) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
+      return;
+    }
+    const arg = text.replace('/remove', '').trim();
+    const approved = await loadJson('data/registrations.json', []);
+    const idx = /^\d+$/.test(arg) ? Number(arg) - 1 : approved.findIndex((t) => t.id === arg);
+    if (idx < 0 || idx >= approved.length) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Не нашёл команду с таким номером. Напишите /teams, чтобы увидеть список с номерами.' });
+      return;
+    }
+    const [removed] = approved.splice(idx, 1);
+    await saveJson('data/registrations.json', approved, `bot: remove team ${removed.name}`);
+    await tg('sendMessage', { chat_id: chatId, text: `Команда «${removed.name}» удалена из турнира.` });
+    return;
+  }
+
   if (text === '/pending') {
     const admin = await loadJson('data/admin.json', null);
     if (!admin || admin.chatId !== chatId) {
@@ -219,6 +289,30 @@ async function handleMessage(msg) {
       await tg('sendMessage', { chat_id: chatId, text: parsed.error + '\n\n' + STEP_PROMPTS.roster });
       return;
     }
+    my.data.roster = parsed.roster;
+    my.step = 'logo';
+    await saveJson('data/bot-state.json', state, 'bot: registration step');
+    await tg('sendMessage', { chat_id: chatId, text: STEP_PROMPTS.logo });
+    return;
+  }
+
+  if (my.step === 'logo') {
+    let logoPath = null;
+    if (msg.photo && msg.photo.length) {
+      try {
+        const best = msg.photo[msg.photo.length - 1];
+        const { buffer, ext } = await tgDownloadPhoto(best.file_id);
+        logoPath = `data/logos/${chatId}-${Date.now()}.${ext}`;
+        await ghUploadLogo(logoPath, buffer, `bot: upload logo for ${my.data.name}`);
+      } catch (e) {
+        console.error('logo upload failed', e);
+        await tg('sendMessage', { chat_id: chatId, text: 'Не получилось загрузить логотип, продолжаем без него.' });
+      }
+    } else if (text.toLowerCase() !== 'пропустить' && text !== '/skip') {
+      await tg('sendMessage', { chat_id: chatId, text: 'Пришлите фото логотипа или напишите «пропустить».' });
+      return;
+    }
+
     const [approvedNow, pendingNow, max] = await Promise.all([
       loadJson('data/registrations.json', []),
       loadJson('data/registrations-pending.json', []),
@@ -233,7 +327,6 @@ async function handleMessage(msg) {
       });
       return;
     }
-    my.data.roster = parsed.roster;
     const app = {
       id: `${chatId}-${Date.now()}`,
       name: my.data.name,
@@ -241,6 +334,7 @@ async function handleMessage(msg) {
       phone: my.data.phone,
       city: my.data.city,
       roster: my.data.roster,
+      logo: logoPath,
       tgChatId: chatId,
       tgUser: msg.from ? (msg.from.username ? '@' + msg.from.username : msg.from.first_name) : '',
       submittedAt: new Date().toISOString(),
@@ -288,16 +382,18 @@ async function sendAppToAdmin(app, adminChatId) {
     `Состав:`,
     rosterText,
   ].join('\n');
-  await tg('sendMessage', {
-    chat_id: adminChatId,
-    text,
-    reply_markup: {
-      inline_keyboard: [[
-        { text: '✅ Подтвердить', callback_data: `a:${app.id}` },
-        { text: '❌ Отклонить', callback_data: `r:${app.id}` },
-      ]],
-    },
-  });
+  const keyboard = {
+    inline_keyboard: [[
+      { text: '✅ Подтвердить', callback_data: `a:${app.id}` },
+      { text: '❌ Отклонить', callback_data: `r:${app.id}` },
+    ]],
+  };
+  if (app.logo) {
+    const rawUrl = `https://raw.githubusercontent.com/${process.env.GH_REPO}/${env('GH_BRANCH', 'main')}/${app.logo}`;
+    await tg('sendPhoto', { chat_id: adminChatId, photo: rawUrl, caption: text, reply_markup: keyboard });
+  } else {
+    await tg('sendMessage', { chat_id: adminChatId, text, reply_markup: keyboard });
+  }
 }
 
 async function handleCallback(cb) {

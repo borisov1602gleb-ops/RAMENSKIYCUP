@@ -167,11 +167,16 @@ main{padding-top:0}
 .pin-stage{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .pin-head{text-align:center;margin-bottom:56px}
 .pin-track{position:relative;max-width:1000px;margin:0 auto;width:100%;padding:0 30px}
-.reg-teams-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;max-width:1000px;margin:0 auto}
-.reg-team-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px}
-.reg-team-card .rtc-dot{width:9px;height:9px;border-radius:50%;background:var(--emerald-lt);flex:none;box-shadow:0 0 8px var(--emerald-glow)}
-.reg-team-card b{font-size:.98rem}
+.reg-teams-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;max-width:1000px;margin:0 auto}
+.reg-team-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .2s var(--ease),border-color .2s var(--ease)}
+.reg-team-card:hover{transform:translateY(-3px);border-color:var(--emerald-lt)}
+.reg-team-card .rtc-shield{width:44px;height:52px;flex:none;position:relative}
+.reg-team-card .rtc-shield svg{width:100%;height:100%}
+.reg-team-card .rtc-shield img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.reg-team-card .rtc-shield .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.reg-team-card b{font-size:.98rem;display:block}
 .reg-team-card span{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.reg-team-card .rtc-badge{margin-top:6px;display:inline-block;font-size:.68rem;letter-spacing:.03em;text-transform:uppercase;color:var(--emerald-lt);background:var(--emerald-glow);padding:3px 8px;border-radius:20px}
 .reg-teams-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:20px;font-size:.92rem}
 .pin-line{position:absolute;top:50%;left:30px;right:30px;height:2px;background:var(--line-2);transform:translateY(-50%)}
 .pin-line-fill{position:absolute;top:0;left:0;height:100%;width:0;background:linear-gradient(90deg,var(--emerald-lt),var(--gold-lt));box-shadow:0 0 14px var(--emerald-glow);transition:width .3s var(--ease)}
@@ -1325,89 +1330,19 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
 <script>
 /* ДАННЫЕ */
-const TEAMS=[
-  {n:"Двор №5",g:"A",c:"#2fa06c",st:"ok",cap:"А. Морозов",roster:[["9","Морозов А.","FWD"],["7","Титов К.","MID"],["4","Гусев Д.","DEF"],["1","Белов В.","GK"],["13","Воронов Т.","DEF"],["14","Кисилёв Б.","DEF"],["15","Пахомов Э.","MID"],["16","Шевцов Г.","MID"]]},
-  {n:"Атлетико Гжель",g:"A",c:"#e0b53f",st:"ok",cap:"Р. Шарипов",roster:[["10","Шарипов Р.","FWD"],["8","Крылов И.","MID"],["5","Носов П.","DEF"],["12","Ким А.","GK"],["13","Малышев О.","DEF"],["14","Гаврилов Ю.","DEF"],["15","Комаров Л.","MID"],["16","Сорокин Ф.","MID"]]},
-  {n:"Спартак-Быково",g:"A",c:"#e05a4a",st:"ok",cap:"Д. Волков",roster:[["11","Волков Д.","FWD"],["6","Зуев М.","MID"],["3","Лапин С.","DEF"],["2","Орлов Н.","GK"],["13","Бахтин Р.","DEF"],["14","Полозов Д.","DEF"],["15","Аксёнов К.","MID"],["16","Мишин В.","MID"]]},
-  {n:"Заречье",g:"A",c:"#4a90d9",st:"wait",cap:"И. Седов",roster:[["7","Седов И.","FWD"],["9","Мамонтов А.","MID"],["4","Дроздов Е.","DEF"],["1","Чиж В.","GK"],["13","Дьячков С.","DEF"],["14","Кожевников М.","DEF"],["15","Плотников А.","MID"],["16","Быков Н.","MID"]]},
-  {n:"Родники Юнайтед",g:"B",c:"#9b59d0",st:"ok",cap:"К. Ефимов",roster:[["10","Ефимов К.","FWD"],["8","Панин Р.","MID"],["5","Быков Д.","DEF"],["11","Зотов А.","GK"],["13","Уваров И.","DEF"],["14","Скворцов П.","DEF"],["15","Родионов Е.","MID"],["16","Лёвин Х.","MID"]]},
-  {n:"Кратово Сити",g:"B",c:"#16a085",st:"ok",cap:"С. Рыбаков",roster:[["9","Рыбаков С.","FWD"],["7","Голубев И.","MID"],["6","Фомин Д.","DEF"],["3","Тарасов М.","GK"],["13","Журавлёв Т.","DEF"],["14","Пестов У.","DEF"],["15","Кириллов Ж.","MID"],["16","Чечёткин Я.","MID"]]},
-  {n:"Ильинка",g:"B",c:"#e67e22",st:"ok",cap:"П. Жуков",roster:[["11","Жуков П.","FWD"],["4","Соколов А.","MID"],["8","Веселов К.","DEF"],["1","Груздев Н.","GK"],["13","Овчинников З.","DEF"],["14","Раков Ч.","DEF"],["15","Сидоркин Щ.","MID"],["16","Прохоров Ы.","MID"]]},
-  {n:"Удельная",g:"B",c:"#27ae60",st:"wait",cap:"А. Логинов",roster:[["10","Логинов А.","FWD"],["5","Карпов И.","MID"],["7","Мельник Д.","DEF"],["2","Русин В.","GK"],["13","Гущин Э.","DEF"],["14","Митин Ю.","DEF"],["15","Тропин Б.","MID"],["16","Нестеров Г.","MID"]]},
-  {n:"Донино Динамо",g:"C",c:"#5d6d7e",st:"ok",cap:"В. Щукин",roster:[["9","Щукин В.","FWD"],["8","Ларин П.","MID"],["4","Хохлов Е.","DEF"],["1","Юдин А.","GK"],["13","Ямщиков О.","DEF"],["14","Клюев Л.","DEF"],["15","Веретенников Ф.","MID"],["16","Бирюков Р.","MID"]]},
-  {n:"Софьино Юг",g:"C",c:"#d35400",st:"ok",cap:"Н. Ковалёв",roster:[["11","Ковалёв Н.","FWD"],["6","Дёмин Р.","MID"],["5","Савин И.","DEF"],["3","Абрамов Д.","GK"],["13","Стрелков Д.","DEF"],["14","Захаркин К.","DEF"],["15","Люлин В.","MID"],["16","Костров С.","MID"]]},
-  {n:"Чулково FC",g:"C",c:"#3498db",st:"ok",cap:"М. Терехов",roster:[["10","Терехов М.","FWD"],["7","Блинов А.","MID"],["8","Котов С.","DEF"],["12","Ершов В.","GK"],["13","Марьин М.","DEF"],["14","Голиков А.","DEF"],["15","Тищенко Н.","MID"],["16","Дубинин И.","MID"]]},
-  {n:"Островцы",g:"C",c:"#e84393",st:"wait",cap:"Д. Соловьёв",roster:[["9","Соловьёв Д.","FWD"],["4","Гончар И.","MID"],["6","Пименов К.","DEF"],["1","Судаков Н.","GK"],["13","Крутов П.","DEF"],["14","Ощепков Е.","DEF"],["15","Валов Х.","MID"],["16","Гладков Т.","MID"]]},
-  {n:"Верея Атлетик",g:"D",c:"#6c5ce7",st:"ok",cap:"А. Кузьмин",roster:[["11","Кузьмин А.","FWD"],["8","Родин П.","MID"],["5","Галкин Д.","DEF"],["2","Шилов В.","GK"],["13","Бортников У.","DEF"],["14","Селифанов Ж.","DEF"],["15","Данилевский Я.","MID"],["16","Ерохин З.","MID"]]},
-  {n:"Заворово",g:"D",c:"#00b894",st:"ok",cap:"И. Панфилов",roster:[["10","Панфилов И.","FWD"],["7","Дубов А.","MID"],["4","Лыков Е.","DEF"],["1","Зимин Н.","GK"],["13","Батурин Ч.","DEF"],["14","Шершнёв Щ.","DEF"],["15","Юрьев Ы.","MID"],["16","Ослин Э.","MID"]]},
-  {n:"Никоновское",g:"D",c:"#fdcb6e",st:"ok",cap:"С. Марков",roster:[["9","Марков С.","FWD"],["6","Быстров Р.","MID"],["8","Ушаков Д.","DEF"],["3","Гущин М.","GK"],["13","Толстов Ю.","DEF"],["14","Абакумов Б.","DEF"],["15","Раевский Г.","MID"],["16","Хромов О.","MID"]]},
-  {n:"Юбилейный",g:"D",c:"#fd79a8",st:"wait",cap:"К. Данилов",roster:[["11","Данилов К.","FWD"],["5","Фадеев И.","MID"],["7","Осипов А.","DEF"],["2","Рогов В.","GK"],["13","Заикин Л.","DEF"],["14","Пыжов Ф.","DEF"],["15","Кудасов Р.","MID"],["16","Ветров Д.","MID"]]},
-];
-const BRACKET=[
-  {h:"1/4 финала",m:[[["Двор №5",3,1],["Заречье",1,0]],[["Кратово Сити",2,1],["Удельная",0,0]],[["Ильинка",1,0],["Спартак-Быково",2,1]],[["Родники Юн.",4,1],["Атлетико Гжель",2,0]]]},
-  {h:"1/2 финала",m:[[["Двор №5",2,1],["Кратово Сити",1,0]],[["Спартак-Быково",1,0],["Родники Юн.",3,1]]]},
-  {h:"🏆 Финал",fin:1,m:[[["Двор №5","—",0],["Родники Юн.","—",0]]]},
-];
-const PLAYOFF_MATCHES=[
-  {d:"1 ИЮН",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1"},
-  {d:"1 ИЮН",t:"13:30",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2"},
-  {d:"2 ИЮН",t:"12:00",a:"Ильинка",b:"Спартак-Быково",ca:"#e67e22",cb:"#e05a4a",f:"Поле 1"},
-  {d:"2 ИЮН",t:"13:30",a:"Родники Юн.",b:"Атлетико Гжель",ca:"#9b59d0",cb:"#e0b53f",f:"Поле 2"},
-];
+const TEAMS=[];
+const BRACKET=[];
+const PLAYOFF_MATCHES=[];
 /* Календарь групп — единственный источник данных: таблицы, форма команд
    и «ближайшие матчи» на главной считаются из счётов автоматически */
-const GROUP_MATCHES={
-  A:[
-    {d:"12 АПР",t:"12:00",a:"Двор №5",b:"Атлетико Гжель",ca:"#2fa06c",cb:"#e0b53f",f:"Поле 1",sc:"3 : 1",
-      events:[{min:8,type:"goal",team:"a",player:"Морозов А."},{min:23,type:"yellow",team:"b",player:"Крылов И."},{min:31,type:"goal",team:"b",player:"Шарипов Р."},{min:44,type:"goal",team:"a",player:"Титов К."},{min:47,type:"goal",team:"a",player:"Морозов А."}]},
-    {d:"12 АПР",t:"13:30",a:"Спартак-Быково",b:"Заречье",ca:"#e05a4a",cb:"#4a90d9",f:"Поле 2",sc:"2 : 2",
-      events:[{min:5,type:"goal",team:"b",player:"Седов И."},{min:19,type:"goal",team:"a",player:"Волков Д."},{min:38,type:"yellow",team:"a",player:"Зуев М."},{min:41,type:"goal",team:"b",player:"Мамонтов А."},{min:49,type:"goal",team:"a",player:"Волков Д."}]},
-    {d:"19 АПР",t:"12:00",a:"Двор №5",b:"Спартак-Быково",ca:"#2fa06c",cb:"#e05a4a",f:"Поле 1",sc:"2 : 0",
-      events:[{min:14,type:"goal",team:"a",player:"Морозов А."},{min:36,type:"red",team:"b",player:"Лапин С."},{min:52,type:"goal",team:"a",player:"Титов К."}]},
-    {d:"19 АПР",t:"13:30",a:"Атлетико Гжель",b:"Заречье",ca:"#e0b53f",cb:"#4a90d9",f:"Поле 2",sc:"3 : 1",
-      events:[{min:6,type:"goal",team:"a",player:"Шарипов Р."},{min:22,type:"goal",team:"a",player:"Крылов И."},{min:40,type:"goal",team:"b",player:"Седов И."},{min:58,type:"goal",team:"a",player:"Шарипов Р."}]},
-    {d:"26 АПР",t:"12:00",a:"Двор №5",b:"Заречье",ca:"#2fa06c",cb:"#4a90d9",f:"Поле 1",live:true,
-      events:[{min:11,type:"goal",team:"a",player:"Титов К."},{min:27,type:"yellow",team:"b",player:"Дроздов Е."}]},
-    {d:"26 АПР",t:"13:30",a:"Атлетико Гжель",b:"Спартак-Быково",ca:"#e0b53f",cb:"#e05a4a",f:"Поле 2"},
-  ],
-  B:[
-    {d:"12 АПР",t:"15:00",a:"Родники Юнайтед",b:"Кратово Сити",ca:"#9b59d0",cb:"#16a085",f:"Поле 1",sc:"2 : 1"},
-    {d:"12 АПР",t:"16:30",a:"Ильинка",b:"Удельная",ca:"#e67e22",cb:"#27ae60",f:"Поле 2",sc:"1 : 0"},
-    {d:"19 АПР",t:"15:00",a:"Родники Юнайтед",b:"Ильинка",ca:"#9b59d0",cb:"#e67e22",f:"Поле 1",sc:"3 : 1"},
-    {d:"19 АПР",t:"16:30",a:"Кратово Сити",b:"Удельная",ca:"#16a085",cb:"#27ae60",f:"Поле 2",sc:"4 : 0"},
-    {d:"26 АПР",t:"15:00",a:"Родники Юнайтед",b:"Удельная",ca:"#9b59d0",cb:"#27ae60",f:"Поле 1"},
-    {d:"26 АПР",t:"16:30",a:"Кратово Сити",b:"Ильинка",ca:"#16a085",cb:"#e67e22",f:"Поле 2"},
-  ],
-  C:[
-    {d:"13 АПР",t:"12:00",a:"Донино Динамо",b:"Софьино Юг",ca:"#5d6d7e",cb:"#d35400",f:"Поле 1",sc:"4 : 0"},
-    {d:"13 АПР",t:"13:30",a:"Чулково FC",b:"Островцы",ca:"#3498db",cb:"#e84393",f:"Поле 2",sc:"2 : 0"},
-    {d:"20 АПР",t:"12:00",a:"Донино Динамо",b:"Чулково FC",ca:"#5d6d7e",cb:"#3498db",f:"Поле 1",sc:"1 : 1"},
-    {d:"20 АПР",t:"13:30",a:"Софьино Юг",b:"Островцы",ca:"#d35400",cb:"#e84393",f:"Поле 2",sc:"3 : 1"},
-    {d:"27 АПР",t:"12:00",a:"Донино Динамо",b:"Островцы",ca:"#5d6d7e",cb:"#e84393",f:"Поле 1"},
-    {d:"27 АПР",t:"13:30",a:"Чулково FC",b:"Софьино Юг",ca:"#3498db",cb:"#d35400",f:"Поле 2"},
-  ],
-  D:[
-    {d:"13 АПР",t:"15:00",a:"Верея Атлетик",b:"Заворово",ca:"#6c5ce7",cb:"#00b894",f:"Поле 1",sc:"3 : 2"},
-    {d:"13 АПР",t:"16:30",a:"Никоновское",b:"Юбилейный",ca:"#fdcb6e",cb:"#fd79a8",f:"Поле 2",sc:"2 : 0"},
-    {d:"20 АПР",t:"15:00",a:"Верея Атлетик",b:"Никоновское",ca:"#6c5ce7",cb:"#fdcb6e",f:"Поле 1",sc:"5 : 0"},
-    {d:"20 АПР",t:"16:30",a:"Заворово",b:"Юбилейный",ca:"#00b894",cb:"#fd79a8",f:"Поле 2",sc:"3 : 1"},
-    {d:"27 АПР",t:"15:00",a:"Верея Атлетик",b:"Юбилейный",ca:"#6c5ce7",cb:"#fd79a8",f:"Поле 1"},
-    {d:"27 АПР",t:"16:30",a:"Заворово",b:"Никоновское",ca:"#00b894",cb:"#fdcb6e",f:"Поле 2"},
-  ],
-};
+const GROUP_MATCHES={};
 Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach((m,i)=>{m.id=L+i}));
 PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
 function findMatchById(id){
   for(const L of Object.keys(GROUP_MATCHES)){const f=GROUP_MATCHES[L].find(m=>m.id===id);if(f)return f}
   return PLAYOFF_MATCHES.find(m=>m.id===id);
 }
-let SCORERS=[
-  {n:"Морозов А.",team:"Двор №5",g:5},
-  {n:"Ефимов К.",team:"Родники Юнайтед",g:4},
-  {n:"Кузьмин А.",team:"Верея Атлетик",g:4},
-  {n:"Щукин В.",team:"Донино Динамо",g:3},
-  {n:"Шарипов Р.",team:"Атлетико Гжель",g:3},
-];
+let SCORERS=[];
 let NEWS=[
   {d:"20 АПР",title:"Сыгран второй тур группового этапа",text:"«Верея Атлетик» разгромила «Никоновское» 5:0 и почти гарантировала себе первое место в группе D."},
   {d:"14 АПР",title:"Открыта продажа атрибутики",text:"Шарфы и футболки турнира можно приобрести у волонтёров на стадионе «Сатурн» в дни матчей."},
@@ -1469,12 +1404,18 @@ function miniShield(c,letters){const id=sid++;return `<span class="shield"><svg 
 /* МОДАЛКА СОСТАВА */
 const POS_LABELS={GK:'Вратари',DEF:'Защитники',MID:'Полузащитники',FWD:'Нападающие'};
 const POS_ORDER=['GK','DEF','MID','FWD'];
+function hashColor(str){
+  let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;
+  return `hsl(${h%360},58%,48%)`;
+}
 const TEAM_MODAL={
-  open(name){
-    const t=TEAMS.find(x=>x.n===name);if(!t)return;
+  _paint(t){
+    const crest=t.logo
+      ?`<img src="${t.logo}" alt="${t.n}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      :`${shieldSVG(t.c,sid++)}<span class="ini">${ini(t.n)}</span>`;
     document.getElementById('tmHead').innerHTML=`
-      <div class="team-shield">${shieldSVG(t.c,sid++)}<span class="ini">${ini(t.n)}</span></div>
-      <div><h2>${t.n}</h2><div class="team-grp">Группа ${t.g} · ${t.st==='ok'?'Заявка подтверждена':'Лист ожидания'}</div></div>
+      <div class="team-shield">${crest}</div>
+      <div><h2>${t.n}</h2><div class="team-grp">${t.groupLabel}</div></div>
       <button class="tm-close" onclick="TEAM_MODAL.close()">✕</button>`;
     const byPos={};POS_ORDER.forEach(p=>byPos[p]=[]);
     t.roster.forEach(r=>{(byPos[r[2]]||byPos.MID).push(r)});
@@ -1483,11 +1424,20 @@ const TEAM_MODAL={
       ${POS_ORDER.filter(p=>byPos[p].length).map(p=>`
         <div class="tm-pos-h">${POS_LABELS[p]}</div>
         <div class="tm-players">${byPos[p].map(r=>{
-          const isCap=r[1].includes(t.cap.split(' ').pop());
+          const isCap=t.cap&&r[1].includes(t.cap.split(' ').pop());
           return `<div class="tm-player ${isCap?'is-cap':''}"><span class="no">#${r[0]}</span><span>${r[1]}</span>${isCap?'<span class="capbadge">КАПИТАН</span>':''}</div>`;
         }).join('')}</div>`).join('')}`;
     document.getElementById('teamModal').classList.add('open');
     document.body.style.overflow='hidden';
+  },
+  open(name){
+    const t=TEAMS.find(x=>x.n===name);if(!t)return;
+    this._paint({...t,groupLabel:`Группа ${t.g} · ${t.st==='ok'?'Заявка подтверждена':'Лист ожидания'}`});
+  },
+  openReg(id){
+    const list=window.REGISTERED_TEAMS||[];
+    const t=list.find(x=>x.id===id);if(!t)return;
+    this._paint({n:t.name,c:hashColor(t.name),logo:t.logo,cap:t.captain,roster:t.roster,groupLabel:'Ожидает жеребьёвки'});
   },
   close(){
     document.getElementById('teamModal').classList.remove('open');
@@ -1796,20 +1746,28 @@ async function loadRegisteredTeams(){
     return null;
   }
 }
+function regTeamCardHTML(t){
+  const crest=t.logo
+    ?`<img src="${t.logo}" alt="${t.name}">`
+    :`${shieldSVG(hashColor(t.name),sid++)}<span class="ini">${ini(t.name)}</span>`;
+  return `
+    <div class="reg-team-card" onclick="TEAM_MODAL.openReg('${t.id}')">
+      <div class="rtc-shield">${crest}</div>
+      <div><b>${t.name}</b><span>Капитан: ${t.captain}</span><span class="rtc-badge">Подтверждена</span></div>
+    </div>`;
+}
 function renderRegistrations(list){
   const el=document.getElementById('regTeamsList');if(!el)return;
   if(list===null){el.innerHTML='<div class="reg-teams-empty">Список появится, как только бот начнёт принимать заявки.</div>';return}
   if(!list.length){el.innerHTML='<div class="reg-teams-empty">Пока никто не зарегистрировался — станьте первыми!</div>';return}
-  el.innerHTML=list.map(t=>`
-    <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+  el.innerHTML=list.map(regTeamCardHTML).join('');
 }
 function renderAwaitingDraw(list){
   const wrap=document.getElementById('awaitingDrawBlock');const el=document.getElementById('awaitingDrawList');
   if(!wrap||!el)return;
   if(!list||!list.length){wrap.style.display='none';return}
   wrap.style.display='';
-  el.innerHTML=list.map(t=>`
-    <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+  el.innerHTML=list.map(regTeamCardHTML).join('');
 }
 loadRegisteredTeams().then(list=>{renderRegistrations(list);renderAwaitingDraw(list)});
 
@@ -2075,7 +2033,7 @@ renderTeams('all');onScroll();
    PUBLISHED_STAGE — что видят ВСЕ посетители сайта. Чтобы опубликовать
    другой этап для всех, значение нужно поменять и запросить публикацию —
    переключение в панели ниже меняет вид только в текущем браузере (предпросмотр). */
-const PUBLISHED_STAGE='group';
+const PUBLISHED_STAGE='registration';
 const STAGE_KEY='rkch_stage_preview';
 const ADMIN_SESSION_KEY='rkch_admin_ok';
 const ADMIN_USER='admin';
