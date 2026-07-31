@@ -167,6 +167,12 @@ main{padding-top:0}
 .pin-stage{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .pin-head{text-align:center;margin-bottom:56px}
 .pin-track{position:relative;max-width:1000px;margin:0 auto;width:100%;padding:0 30px}
+.reg-teams-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;max-width:1000px;margin:0 auto}
+.reg-team-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px}
+.reg-team-card .rtc-dot{width:9px;height:9px;border-radius:50%;background:var(--emerald-lt);flex:none;box-shadow:0 0 8px var(--emerald-glow)}
+.reg-team-card b{font-size:.98rem}
+.reg-team-card span{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.reg-teams-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:20px;font-size:.92rem}
 .pin-line{position:absolute;top:50%;left:30px;right:30px;height:2px;background:var(--line-2);transform:translateY(-50%)}
 .pin-line-fill{position:absolute;top:0;left:0;height:100%;width:0;background:linear-gradient(90deg,var(--emerald-lt),var(--gold-lt));box-shadow:0 0 14px var(--emerald-glow);transition:width .3s var(--ease)}
 .pin-ball{position:absolute;top:50%;left:30px;transform:translate(-50%,-50%);font-size:1.5rem;z-index:3;transition:left .3s var(--ease);filter:drop-shadow(0 0 8px var(--gold-glow))}
@@ -871,6 +877,12 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <div class="pin-step on"><div class="pin-node">🏆</div><div class="n">ФИНАЛ</div><h3>Кубок</h3><p>Чемпион поднимает трофей</p></div>
       </div>
     </div>
+
+    <div class="s-head" style="margin:80px 0 20px" id="regListHead">
+      <div class="tag"><span class="dot"></span>Уже с нами</div>
+      <h2 class="s-title" style="font-size:1.7rem">Зарегистрированные команды</h2>
+    </div>
+    <div id="regTeamsList" class="reg-teams-list"></div>
   </div>
 </div>
 
@@ -1761,6 +1773,23 @@ function renderNews(){
     </article>`).join('');
 }
 renderNews();
+
+/* КОМАНДЫ, ЗАРЕГИСТРИРОВАННЫЕ ЧЕРЕЗ TELEGRAM-БОТА */
+async function renderRegistrations(){
+  const el=document.getElementById('regTeamsList');if(!el)return;
+  try{
+    const r=await fetch('./data/registrations.json',{cache:'no-cache'});
+    if(!r.ok)throw new Error('no data file yet');
+    const list=await r.json();
+    window.REGISTERED_TEAMS=list;
+    if(!list.length){el.innerHTML='<div class="reg-teams-empty">Пока никто не зарегистрировался — станьте первыми!</div>';return}
+    el.innerHTML=list.map(t=>`
+      <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+  }catch(e){
+    el.innerHTML='<div class="reg-teams-empty">Список появится, как только бот начнёт принимать заявки.</div>';
+  }
+}
+renderRegistrations();
 
 /* БОМБАРДИРЫ */
 function renderScorers(){
