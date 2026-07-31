@@ -294,6 +294,28 @@ main{padding-top:0}
 .mm-empty{color:var(--muted);font-size:.88rem;text-align:center;padding:20px 0}
 @media(max-width:640px){.pp{width:52px}.pp .nm{max-width:52px}.mm-teams{font-size:.85rem;gap:10px}.mm-score{font-size:1.2rem;padding:5px 12px}}
 .team-modal{width:min(640px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;overflow:hidden}
+
+/* ВИЗАРД РЕГИСТРАЦИИ */
+.rw-dots{display:flex;gap:8px}
+.rw-dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);transition:all .3s var(--ease)}
+.rw-dot.on{background:var(--gold-lt);width:22px;border-radius:4px}
+.rw-dot.done{background:var(--emerald-lt)}
+.rw-step{text-align:center;padding:10px 6px 6px}
+.rw-icon{font-size:2.8rem;margin-bottom:16px}
+.rw-step h3{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.3rem;margin-bottom:14px}
+.rw-step p{color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:26px}
+.rw-doclist{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;text-align:left}
+.rw-doclink{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;font-weight:600;font-size:.9rem;transition:all .25s var(--ease)}
+.rw-doclink:hover{border-color:var(--emerald);background:var(--panel-2)}
+.rw-doclink .seen{margin-left:auto;color:var(--emerald-lt);font-size:.76rem;opacity:0;transition:opacity .3s var(--ease)}
+.rw-doclink.viewed .seen{opacity:1}
+.rw-consent{display:flex;align-items:flex-start;gap:12px;text-align:left;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:26px;cursor:pointer}
+.rw-consent input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--emerald-lt);cursor:pointer}
+.rw-consent span{font-size:.88rem;color:var(--text);line-height:1.5}
+.rw-nav{display:flex;gap:12px;justify-content:center}
+.rw-tg-btn{display:inline-flex;align-items:center;gap:10px;padding:18px 36px;border-radius:var(--shape-full);background:linear-gradient(135deg,#2AABEE,#229ED9);color:#fff;font-weight:700;font-size:1.05rem;box-shadow:0 12px 30px rgba(42,171,238,.35);transition:transform .3s var(--ease)}
+.rw-tg-btn:hover{transform:translateY(-3px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 .tm-head{display:flex;align-items:center;gap:18px;padding:30px 32px;position:relative;background:var(--panel-2)}
 .tm-head .team-shield{width:56px;height:66px}
 .tm-head h2{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.3rem;letter-spacing:.02em}
@@ -1143,6 +1165,17 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
   </div>
 </div>
 
+<!-- ВИЗАРД РЕГИСТРАЦИИ КОМАНДЫ -->
+<div class="team-modal-overlay" id="regWizard" onclick="if(event.target===this)REG_WIZARD.close()">
+  <div class="team-modal" style="width:min(560px,100%)">
+    <div class="tm-head" style="justify-content:center">
+      <div class="rw-dots" id="rwDots"></div>
+      <button class="tm-close" onclick="REG_WIZARD.close()">✕</button>
+    </div>
+    <div class="tm-body" id="rwBody"></div>
+  </div>
+</div>
+
 <!-- АДМИН-ПАНЕЛЬ: вход -->
 <div class="admin-overlay" id="adminLogin">
   <div class="admin-box">
@@ -1249,6 +1282,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <div class="admin-field"><label>Дата финала</label><input type="text" id="setFinalDate" placeholder="7 июня"></div>
           <div class="admin-field"><label>Время финала</label><input type="text" id="setFinalTime" placeholder="17:00"></div>
           <div class="admin-field"><label>Место проведения финала</label><input type="text" id="setFinalVenue" placeholder="Стадион «Сатурн», Раменское"></div>
+          <div class="admin-field"><label>Юзернейм Telegram-бота регистрации</label><input type="text" id="setTgBot" placeholder="@test"></div>
           <div class="admin-field"><label>Регистрация команд</label>
             <button class="admin-stage-btn" id="regToggleBtn" style="width:100%" onclick="ADMIN.toggleRegistration()"></button>
           </div>
@@ -1459,6 +1493,84 @@ const DOC_VIEWER={
   }
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')DOC_VIEWER.close()});
+
+/* ВИЗАРД РЕГИСТРАЦИИ КОМАНДЫ: 4 шага */
+const REG_WIZARD_DOCS=[
+  {url:'docs/ustav-turnira.html',t:'Устав турнира'},
+  {url:'docs/match-reglament.html',t:'Регламент проведения матчей'},
+];
+const REG_WIZARD={
+  step:1,
+  docsViewed:{},
+  open(){
+    this.step=1;
+    this.docsViewed={};
+    document.getElementById('regWizard').classList.add('open');
+    document.body.style.overflow='hidden';
+    this.render();
+  },
+  close(){
+    document.getElementById('regWizard').classList.remove('open');
+    document.body.style.overflow='';
+  },
+  next(){if(this.step<4){this.step++;this.render()}},
+  back(){if(this.step>1){this.step--;this.render()}},
+  viewDoc(url,title){
+    this.docsViewed[url]=true;
+    DOC_VIEWER.open(url,title);
+    this.render();
+  },
+  toggleConsent(cb){
+    const btn=document.getElementById('rwNextBtn');
+    if(btn)btn.disabled=!cb.checked;
+  },
+  render(){
+    const dots=document.getElementById('rwDots');
+    if(dots)dots.innerHTML=[1,2,3,4].map(i=>`<span class="rw-dot ${i===this.step?'on':i<this.step?'done':''}"></span>`).join('');
+    const body=document.getElementById('rwBody');if(!body)return;
+    if(this.step===1){
+      body.innerHTML=`
+        <div class="rw-step">
+          <div class="rw-icon">👋</div>
+          <h3>Добро пожаловать!</h3>
+          <p>Рады, что вы хотите присоединиться к Раменскому Кубку Чемпионов. Регистрация команды займёт всего пару минут — проведём вас по шагам.</p>
+          <div class="rw-nav"><button class="btn btn-emerald" onclick="REG_WIZARD.next()">Далее →</button></div>
+        </div>`;
+    }else if(this.step===2){
+      body.innerHTML=`
+        <div class="rw-step">
+          <div class="rw-icon">📋</div>
+          <h3>Ознакомьтесь с документами</h3>
+          <p>Перед регистрацией, пожалуйста, изучите основные документы турнира.</p>
+          <div class="rw-doclist">${REG_WIZARD_DOCS.map(d=>`
+            <a class="rw-doclink ${this.docsViewed[d.url]?'viewed':''}" href="#" onclick="event.preventDefault();REG_WIZARD.viewDoc('${d.url}','${d.t}')">📄 ${d.t}<span class="seen">✓ просмотрено</span></a>`).join('')}
+          </div>
+          <div class="rw-nav"><button class="btn btn-ghost" onclick="REG_WIZARD.back()">← Назад</button><button class="btn btn-emerald" onclick="REG_WIZARD.next()">Далее →</button></div>
+        </div>`;
+    }else if(this.step===3){
+      body.innerHTML=`
+        <div class="rw-step">
+          <div class="rw-icon">✅</div>
+          <h3>Согласие на участие</h3>
+          <p>Последний шаг перед переходом к регистрации.</p>
+          <label class="rw-consent"><input type="checkbox" id="rwConsent" onchange="REG_WIZARD.toggleConsent(this)"><span>Я ознакомился(ась) с уставом и регламентом турнира, принимаю условия участия и согласен(на) на обработку персональных данных.</span></label>
+          <div class="rw-nav"><button class="btn btn-ghost" onclick="REG_WIZARD.back()">← Назад</button><button class="btn btn-emerald" id="rwNextBtn" disabled onclick="REG_WIZARD.next()">Далее →</button></div>
+        </div>`;
+    }else{
+      const s=getSettings();
+      const handle=(s.tgBot||'@test').replace('@','');
+      body.innerHTML=`
+        <div class="rw-step">
+          <div class="rw-icon">🚀</div>
+          <h3>Остался последний шаг</h3>
+          <p>Для завершения регистрации команды перейдите в нашего Telegram-бота — он проведёт вас через оформление заявки.</p>
+          <a class="rw-tg-btn" href="https://t.me/${handle}" target="_blank" rel="noopener">✈️ Открыть @${handle}</a>
+          <div class="rw-nav" style="margin-top:22px"><button class="btn btn-ghost" onclick="REG_WIZARD.back()">← Назад</button></div>
+        </div>`;
+    }
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')REG_WIZARD.close()});
 
 /* КАРТОЧКА МАТЧА: состав на поле (7+1) + хронология + MVP */
 const POS_ROWS=['GK','DEF','MID','FWD'];
@@ -1946,7 +2058,8 @@ const DEFAULT_SETTINGS={
   regOpen:true,
   finalDate:'7 июня',
   finalTime:'17:00',
-  finalVenue:'Стадион «Сатурн», Раменское'
+  finalVenue:'Стадион «Сатурн», Раменское',
+  tgBot:'@test'
 };
 function getSettings(){
   try{return Object.assign({},DEFAULT_SETTINGS,JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}'))}
@@ -2012,9 +2125,7 @@ const ADMIN={
   preview(stage){localStorage.setItem(STAGE_KEY,stage);applyStage(stage);this.refreshConsole()},
   resetPreview(){localStorage.removeItem(STAGE_KEY);applyStage(PUBLISHED_STAGE);this.refreshConsole()},
   enterFromRegistration(){
-    localStorage.removeItem(STAGE_KEY);
-    applyStage('group');
-    if(typeof go==='function')go('teams');
+    REG_WIZARD.open();
   },
   drawGroups(){
     const pool=TEAMS.filter(t=>t.st==='ok');
@@ -2032,7 +2143,7 @@ const ADMIN={
   },
   refreshSettingsForm(){
     const s=getSettings();
-    const map={setStart:s.startISO,setPhone:s.phone,setEmail:s.email,setPrize:s.prize,setBadge:s.badge,setSub:s.sub,setFinalDate:s.finalDate,setFinalTime:s.finalTime,setFinalVenue:s.finalVenue};
+    const map={setStart:s.startISO,setPhone:s.phone,setEmail:s.email,setPrize:s.prize,setBadge:s.badge,setSub:s.sub,setFinalDate:s.finalDate,setFinalTime:s.finalTime,setFinalVenue:s.finalVenue,setTgBot:s.tgBot};
     Object.keys(map).forEach(id=>{const el=document.getElementById(id);if(el)el.value=map[id]});
     const btn=document.getElementById('regToggleBtn');
     if(btn){
@@ -2051,6 +2162,7 @@ const ADMIN={
     s.finalDate=document.getElementById('setFinalDate').value||s.finalDate;
     s.finalTime=document.getElementById('setFinalTime').value||s.finalTime;
     s.finalVenue=document.getElementById('setFinalVenue').value||s.finalVenue;
+    s.tgBot=document.getElementById('setTgBot').value||s.tgBot;
     localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
     applySettingsToDom(s);
     this.refreshSettingsForm();
@@ -2063,9 +2175,10 @@ const ADMIN={
     this.refreshSettingsForm();
   },
   regCtaClick(e){
+    if(e)e.preventDefault();
     const s=getSettings();
-    if(!s.regOpen){if(e)e.preventDefault();return false}
-    go('teams',e);
+    if(!s.regOpen)return false;
+    REG_WIZARD.open();
     return false;
   },
   renderBracketEditor(){
