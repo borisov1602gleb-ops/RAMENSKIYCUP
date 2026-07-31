@@ -1389,6 +1389,7 @@ function parseScore(sc){
 function computeStandings(L){
   const rows={};
   const touch=(n,c)=>{if(!rows[n])rows[n]={n,c,i:0,w:0,d:0,l:0,gf:0,ga:0,p:0,form:[]};return rows[n]};
+  TEAMS.filter(t=>t.g===L).forEach(t=>touch(t.n,t.c));
   (GROUP_MATCHES[L]||[]).forEach(m=>{
     const A=touch(m.a,m.ca),B=touch(m.b,m.cb);
     const s=parseScore(m.sc);if(!s)return;
@@ -1400,8 +1401,9 @@ function computeStandings(L){
   return Object.values(rows).sort((x,y)=>y.p-x.p||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||x.n.localeCompare(y.n));
 }
 function getGroupStandings(){
+  const letters=[...new Set(TEAMS.map(t=>t.g))].filter(Boolean).sort();
   const out={};
-  Object.keys(GROUP_MATCHES).forEach(L=>{out[L]=computeStandings(L)});
+  letters.forEach(L=>{out[L]=computeStandings(L)});
   return out;
 }
 function upcomingFromGroups(){
