@@ -50,7 +50,8 @@
     "tgChatId": 929202389,
     "tgUser": "@gacaaev",
     "submittedAt": "2026-07-31T12:33:14.316Z",
-    "approvedAt": "2026-07-31T12:34:01.699Z"
+    "approvedAt": "2026-07-31T12:34:01.699Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785501551762",
@@ -103,7 +104,8 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-07-31T12:39:11.762Z",
-    "approvedAt": "2026-07-31T12:39:18.989Z"
+    "approvedAt": "2026-07-31T12:39:18.989Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785502320671",
@@ -156,7 +158,8 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-07-31T12:52:00.671Z",
-    "approvedAt": "2026-07-31T12:52:06.695Z"
+    "approvedAt": "2026-07-31T12:52:06.695Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785502636625",
@@ -210,6 +213,7 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-07-31T12:57:16.625Z",
-    "approvedAt": "2026-07-31T12:57:47.449Z"
+    "approvedAt": "2026-07-31T12:57:47.449Z",
+    "group": "A"
   }
 ]
