@@ -439,7 +439,7 @@ body.site-edit-mode [data-edit-text][contenteditable="true"]{outline:2px solid v
 .et-color{display:flex;align-items:center;gap:8px}
 .et-color input[type=color]{width:32px;height:32px;border:1px solid var(--line-2);border-radius:8px;background:none;padding:0;cursor:pointer}
 .et-color span{font-size:.78rem;color:var(--text)}
-.edit-toolbar .et-done{margin-left:auto;padding:10px 22px;border-radius:var(--shape-full);background:var(--emerald);color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0}
+.edit-toolbar .et-done{margin-left:auto;padding:10px 22px;border-radius:var(--shape-full);background:var(--red);color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0;box-shadow:0 4px 16px var(--red-glow)}
 .edit-toolbar .et-reset{padding:10px 16px;border-radius:var(--shape-full);border:1px solid var(--line-2);color:var(--muted);font-size:.8rem;flex-shrink:0}
 .edit-toolbar .et-reset:hover{color:var(--text);border-color:var(--muted)}
 @media(max-width:760px){.edit-toolbar{gap:12px;padding:10px 16px}.et-label{display:none}}
@@ -1096,7 +1096,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
   <span class="et-label">🎨 Режим редактирования — кликните на текст на странице</span>
   <div class="et-colors" id="etColors"></div>
   <button class="et-reset" onclick="ADMIN.resetEditOverrides()">Сбросить правки</button>
-  <button class="et-done" onclick="ADMIN.exitEditMode()">Готово</button>
+  <button class="et-done" onclick="ADMIN.exitEditMode()">⏹ Закончить редактировать</button>
 </div>
 
 <!-- МОДАЛКА: подробный состав команды -->
@@ -2221,19 +2221,27 @@ const ADMIN={
     this.renderMatchCenterEditor(this._mcId);
   },
   enterEditMode(){
-    this.closeConsole();
-    document.body.classList.add('site-edit-mode');
-    document.getElementById('editToolbar').classList.add('open');
-    this.loadColorInputs();
-    document.querySelectorAll('[data-edit-text]').forEach(el=>{
-      if(el.dataset.editBound)return;
-      el.dataset.editBound='1';
-      el.addEventListener('click',function(){ADMIN._startTextEdit(this)});
-    });
+    try{
+      this.closeConsole();
+      document.body.classList.add('site-edit-mode');
+      const bar=document.getElementById('editToolbar');
+      if(bar)bar.classList.add('open');
+      try{this.loadColorInputs()}catch(e){console.error('loadColorInputs failed',e)}
+      document.querySelectorAll('[data-edit-text]').forEach(el=>{
+        if(el.dataset.editBound)return;
+        el.dataset.editBound='1';
+        el.addEventListener('click',function(){ADMIN._startTextEdit(this)});
+      });
+      window.scrollTo({top:0,behavior:'instant'});
+    }catch(e){
+      console.error('enterEditMode failed',e);
+      alert('Не удалось войти в режим редактирования. Откройте консоль браузера (F12) и пришлите текст ошибки.');
+    }
   },
   exitEditMode(){
     document.body.classList.remove('site-edit-mode');
-    document.getElementById('editToolbar').classList.remove('open');
+    const bar=document.getElementById('editToolbar');
+    if(bar)bar.classList.remove('open');
     document.querySelectorAll('[data-edit-text][contenteditable="true"]').forEach(el=>el.contentEditable='false');
   },
   _startTextEdit(el){
