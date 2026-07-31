@@ -1,6 +1,8 @@
 {
   "929202389": {
-    "step": "name",
-    "data": {}
+    "step": "captain",
+    "data": {
+      "name": "Викинги"
+    }
   }
 }
