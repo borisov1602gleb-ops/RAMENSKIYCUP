@@ -1,8 +1,9 @@
 {
   "584658272": {
-    "step": "captain",
+    "step": "phone",
     "data": {
-      "name": "никак"
+      "name": "никак",
+      "captain": "тест"
     }
   }
 }
