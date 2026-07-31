@@ -1082,6 +1082,15 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
       </div>
       <div class="teams-grid" id="teamsGrid"></div>
 
+      <div id="awaitingDrawBlock" style="display:none;margin-top:60px">
+        <div class="s-head reveal">
+          <div class="tag gold"><span class="dot"></span>Из бота регистрации</div>
+          <h2 class="s-title" style="font-size:1.5rem">Ожидают жеребьёвки</h2>
+          <p class="s-sub">Команды уже подтверждены организатором и ждут распределения по группам.</p>
+        </div>
+        <div id="awaitingDrawList" class="reg-teams-list"></div>
+      </div>
+
       <div class="s-head reveal" style="margin:130px 0 40px">
         <div class="tag"><span class="dot"></span>Групповой этап</div>
         <h2 class="s-title">Группы и расписание</h2>
@@ -1775,21 +1784,34 @@ function renderNews(){
 renderNews();
 
 /* КОМАНДЫ, ЗАРЕГИСТРИРОВАННЫЕ ЧЕРЕЗ TELEGRAM-БОТА */
-async function renderRegistrations(){
-  const el=document.getElementById('regTeamsList');if(!el)return;
+async function loadRegisteredTeams(){
   try{
     const r=await fetch('./data/registrations.json',{cache:'no-cache'});
     if(!r.ok)throw new Error('no data file yet');
     const list=await r.json();
     window.REGISTERED_TEAMS=list;
-    if(!list.length){el.innerHTML='<div class="reg-teams-empty">Пока никто не зарегистрировался — станьте первыми!</div>';return}
-    el.innerHTML=list.map(t=>`
-      <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+    return list;
   }catch(e){
-    el.innerHTML='<div class="reg-teams-empty">Список появится, как только бот начнёт принимать заявки.</div>';
+    window.REGISTERED_TEAMS=[];
+    return null;
   }
 }
-renderRegistrations();
+function renderRegistrations(list){
+  const el=document.getElementById('regTeamsList');if(!el)return;
+  if(list===null){el.innerHTML='<div class="reg-teams-empty">Список появится, как только бот начнёт принимать заявки.</div>';return}
+  if(!list.length){el.innerHTML='<div class="reg-teams-empty">Пока никто не зарегистрировался — станьте первыми!</div>';return}
+  el.innerHTML=list.map(t=>`
+    <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+}
+function renderAwaitingDraw(list){
+  const wrap=document.getElementById('awaitingDrawBlock');const el=document.getElementById('awaitingDrawList');
+  if(!wrap||!el)return;
+  if(!list||!list.length){wrap.style.display='none';return}
+  wrap.style.display='';
+  el.innerHTML=list.map(t=>`
+    <div class="reg-team-card"><span class="rtc-dot"></span><div><b>${t.name}</b><span>Капитан: ${t.captain}</span></div></div>`).join('');
+}
+loadRegisteredTeams().then(list=>{renderRegistrations(list);renderAwaitingDraw(list)});
 
 /* БОМБАРДИРЫ */
 function renderScorers(){

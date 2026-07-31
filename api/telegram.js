@@ -9,6 +9,8 @@
 //   GH_BRANCH      - branch to commit to, e.g. main (default: main)
 //   SECRET_TOKEN   - optional, must match Telegram's secret_token header if set
 
+const DEFAULT_MAX_TEAMS = 16;
+
 const POSITIONS = {
   GK: 'GK', ВРТ: 'GK', ВР: 'GK', ГК: 'GK',
   DEF: 'DEF', ЗАЩ: 'DEF', ЗЩ: 'DEF',
@@ -74,6 +76,11 @@ async function loadJson(path, fallback) {
   return json === null ? fallback : json;
 }
 
+async function getMaxTeams() {
+  const cfg = await loadJson('data/bot-config.json', { maxTeams: DEFAULT_MAX_TEAMS });
+  return cfg.maxTeams || DEFAULT_MAX_TEAMS;
+}
+
 async function saveJson(path, obj, message) {
   const { sha } = await ghGetFile(path);
   return ghPutFile(path, obj, sha, message);
@@ -136,6 +143,18 @@ async function handleMessage(msg) {
   const text = (msg.text || '').trim();
 
   if (text === '/start') {
+    const [approvedNow, pendingNow, max] = await Promise.all([
+      loadJson('data/registrations.json', []),
+      loadJson('data/registrations-pending.json', []),
+      getMaxTeams(),
+    ]);
+    if (approvedNow.length + pendingNow.length >= max) {
+      await tg('sendMessage', {
+        chat_id: chatId,
+        text: `К сожалению, все ${max} мест на турнир уже заняты. Регистрация закрыта — следите за новостями, места могут появиться позже.`,
+      });
+      return;
+    }
     await saveJson(`data/bot-state.json`, await withState(chatId, { step: 'name', data: {} }), 'bot: start registration');
     await tg('sendMessage', {
       chat_id: chatId,
@@ -152,6 +171,23 @@ async function handleMessage(msg) {
     }
     await saveJson('data/admin.json', { chatId }, 'bot: register admin');
     await tg('sendMessage', { chat_id: chatId, text: 'Готово! Теперь заявки команд будут приходить сюда на проверку.' });
+    return;
+  }
+
+  if (text.startsWith('/limit')) {
+    const admin = await loadJson('data/admin.json', null);
+    if (!admin || admin.chatId !== chatId) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
+      return;
+    }
+    const n = parseInt(text.replace('/limit', '').trim(), 10);
+    if (!n || n < 1) {
+      const cur = await getMaxTeams();
+      await tg('sendMessage', { chat_id: chatId, text: `Текущий лимит команд: ${cur}. Чтобы изменить, напишите, например: /limit 20` });
+      return;
+    }
+    await saveJson('data/bot-config.json', { maxTeams: n }, `bot: set max teams to ${n}`);
+    await tg('sendMessage', { chat_id: chatId, text: `Готово! Теперь максимум ${n} команд.` });
     return;
   }
 
@@ -183,6 +219,20 @@ async function handleMessage(msg) {
       await tg('sendMessage', { chat_id: chatId, text: parsed.error + '\n\n' + STEP_PROMPTS.roster });
       return;
     }
+    const [approvedNow, pendingNow, max] = await Promise.all([
+      loadJson('data/registrations.json', []),
+      loadJson('data/registrations-pending.json', []),
+      getMaxTeams(),
+    ]);
+    if (approvedNow.length + pendingNow.length >= max) {
+      delete state[chatId];
+      await saveJson('data/bot-state.json', state, 'bot: cancel registration (limit reached)');
+      await tg('sendMessage', {
+        chat_id: chatId,
+        text: `К сожалению, все ${max} мест на турнир уже заняты. Регистрация закрыта — следите за новостями, места могут появиться позже.`,
+      });
+      return;
+    }
     my.data.roster = parsed.roster;
     const app = {
       id: `${chatId}-${Date.now()}`,
@@ -195,14 +245,17 @@ async function handleMessage(msg) {
       tgUser: msg.from ? (msg.from.username ? '@' + msg.from.username : msg.from.first_name) : '',
       submittedAt: new Date().toISOString(),
     };
-    const pending = await loadJson('data/registrations-pending.json', []);
-    pending.push(app);
-    await saveJson('data/registrations-pending.json', pending, `bot: new application from ${app.name}`);
+    pendingNow.push(app);
+    await saveJson('data/registrations-pending.json', pendingNow, `bot: new application from ${app.name}`);
 
     delete state[chatId];
     await saveJson('data/bot-state.json', state, 'bot: finish registration');
 
-    await tg('sendMessage', { chat_id: chatId, text: '✅ Заявка отправлена организатору на проверку. Мы напишем, как только её рассмотрят!' });
+    const queueNumber = approvedNow.length + pendingNow.length;
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: `✅ Заявка отправлена организатору на проверку. Вы заявка №${queueNumber} из ${max} возможных мест. Мы напишем, как только её рассмотрят!`,
+    });
 
     const admin = await loadJson('data/admin.json', null);
     if (admin) await sendAppToAdmin(app, admin.chatId);
@@ -266,6 +319,7 @@ async function handleCallback(cb) {
 
   if (action === 'a') {
     const approved = await loadJson('data/registrations.json', []);
+    const max = await getMaxTeams();
     approved.push({ ...app, approvedAt: new Date().toISOString() });
     await saveJson('data/registrations.json', approved, `bot: approve ${app.name}`);
     await tg('editMessageText', {
@@ -273,7 +327,10 @@ async function handleCallback(cb) {
       message_id: cb.message.message_id,
       text: cb.message.text + '\n\n✅ Одобрено',
     });
-    await tg('sendMessage', { chat_id: app.tgChatId, text: `🎉 Заявка команды «${app.name}» одобрена и добавлена на сайт!` });
+    await tg('sendMessage', {
+      chat_id: app.tgChatId,
+      text: `🎉 Заявка команды «${app.name}» одобрена и добавлена на сайт! Вы — команда №${approved.length} из ${max}.`,
+    });
     await tg('answerCallbackQuery', { callback_query_id: cb.id, text: 'Одобрено' });
   } else {
     await tg('editMessageText', {
@@ -281,7 +338,10 @@ async function handleCallback(cb) {
       message_id: cb.message.message_id,
       text: cb.message.text + '\n\n❌ Отклонено',
     });
-    await tg('sendMessage', { chat_id: app.tgChatId, text: `К сожалению, заявка команды «${app.name}» отклонена. Свяжитесь с организатором для уточнения.` });
+    await tg('sendMessage', {
+      chat_id: app.tgChatId,
+      text: `Мы внимательно рассмотрели заявку команды «${app.name}», но, к сожалению, в данный момент не можем взять вас в турнир. Мы считаем вас сильной и перспективной командой — будем рады видеть вас в следующий раз!`,
+    });
     await tg('answerCallbackQuery', { callback_query_id: cb.id, text: 'Отклонено' });
   }
 }
