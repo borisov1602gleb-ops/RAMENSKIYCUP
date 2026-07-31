@@ -1,9 +1,10 @@
 {
   "584658272": {
-    "step": "phone",
+    "step": "city",
     "data": {
       "name": "чудеса",
-      "captain": "я"
+      "captain": "я",
+      "phone": "9332"
     }
   }
 }
