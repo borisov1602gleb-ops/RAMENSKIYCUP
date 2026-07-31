@@ -1,7 +1,9 @@
 {
   "584658272": {
-    "step": "name",
-    "data": {}
+    "step": "captain",
+    "data": {
+      "name": "8 чудес"
+    }
   },
   "929202389": {
     "step": "roster",
