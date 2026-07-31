@@ -269,6 +269,7 @@ main{padding-top:0}
 .dv-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
 
 /* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ */
+.dc-overlay{z-index:21000}
 .dc-wrap{flex:1;overflow-y:auto;padding:36px;max-width:1200px;margin:0 auto;width:100%}
 .dc-intro{text-align:center;color:var(--muted);max-width:560px;margin:0 auto 30px;font-size:.95rem;line-height:1.6}
 .dc-start-btn{display:block;margin:0 auto 40px;font-size:1.05rem;padding:16px 44px}
@@ -1443,7 +1444,7 @@ function hashColor(str){
 const TEAM_MODAL={
   _paint(t){
     const crest=t.logo
-      ?`<img src="${t.logo}" alt="${t.n}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      ?`<img src="${t.logo}" alt="${t.n}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
       :`${shieldSVG(t.c,sid++)}<span class="ini">${ini(t.n)}</span>`;
     document.getElementById('tmHead').innerHTML=`
       <div class="team-shield">${crest}</div>
@@ -1780,7 +1781,7 @@ async function loadRegisteredTeams(){
 }
 function regTeamCardHTML(t){
   const crest=t.logo
-    ?`<img src="${t.logo}" alt="${t.name}">`
+    ?`<img src="${t.logo}" alt="${t.name}" loading="lazy">`
     :`${shieldSVG(hashColor(t.name),sid++)}<span class="ini">${ini(t.name)}</span>`;
   return `
     <div class="reg-team-card" onclick="TEAM_MODAL.openReg('${t.id}')">
@@ -1809,6 +1810,7 @@ const DRAW_CEREMONY={
     return `<div class="dc-card" data-id="${t.id}"><span class="dc-shield">${shieldSVG(hashColor(t.name),sid++)}</span>${t.name}</div>`;
   },
   async open(){
+    if(typeof ADMIN!=='undefined')ADMIN.closeConsole();
     const el=document.getElementById('drawCeremony');
     el.classList.add('open');
     document.body.style.overflow='hidden';
@@ -2024,7 +2026,12 @@ function onScroll(){
     if(fill){fill.style.width=(p*100)+'%';ball.style.left=`calc(30px + ${p}*(100% - 60px))`}
   }
 }
-window.addEventListener('scroll',onScroll,{passive:true});
+let scrollTicking=false;
+window.addEventListener('scroll',()=>{
+  if(scrollTicking)return;
+  scrollTicking=true;
+  requestAnimationFrame(()=>{onScroll();scrollTicking=false});
+},{passive:true});
 window.addEventListener('resize',onScroll);
 
 /* REVEAL */
@@ -2078,11 +2085,16 @@ kineticScan();
 (function(){
   if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
   const dot=document.getElementById('cDot'),ring=document.getElementById('cRing');
-  let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my,dx=mx,dy=my;
-  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
-  (function loop(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;dx+=(mx-dx)*.42;dy+=(my-dy)*.42;
+  let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my,dx=mx,dy=my,looping=false;
+  function loop(){
+    rx+=(mx-rx)*.16;ry+=(my-ry)*.16;dx+=(mx-dx)*.42;dy+=(my-dy)*.42;
     ring.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;
-    dot.style.transform=`translate(${dx}px,${dy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+    dot.style.transform=`translate(${dx}px,${dy}px) translate(-50%,-50%)`;
+    if(Math.abs(mx-rx)>.1||Math.abs(my-ry)>.1||Math.abs(mx-dx)>.1||Math.abs(my-dy)>.1)requestAnimationFrame(loop);
+    else looping=false;
+  }
+  looping=true;loop();
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;if(!looping){looping=true;requestAnimationFrame(loop)}});
   addEventListener('mousedown',()=>ring.classList.add('press'));
   addEventListener('mouseup',()=>ring.classList.remove('press'));
   const inter='a,button,.team-card,.doc-head,.match-row,.pin-step,.stat,.socials a,.filter-btn,.g-card';
