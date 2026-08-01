@@ -1410,6 +1410,20 @@ function assignMatchIds(){
   PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
 }
 assignMatchIds();
+/* Автогенерация расписания группы: круговой турнир (каждый с каждым),
+   даты/время/площадку и соперников можно потом менять в админке. */
+function ensureGroupSchedule(L){
+  if(GROUP_MATCHES[L]&&GROUP_MATCHES[L].length)return;
+  const teams=TEAMS.filter(t=>t.g===L);
+  if(teams.length<2)return;
+  const matches=[];
+  for(let i=0;i<teams.length;i++){
+    for(let j=i+1;j<teams.length;j++){
+      matches.push({d:'',t:'',a:teams[i].n,b:teams[j].n,ca:teams[i].c,cb:teams[j].c,f:'',sc:null});
+    }
+  }
+  GROUP_MATCHES[L]=matches;
+}
 function findMatchById(id){
   for(const L of Object.keys(GROUP_MATCHES)){const f=GROUP_MATCHES[L].find(m=>m.id===id);if(f)return f}
   return PLAYOFF_MATCHES.find(m=>m.id===id);
@@ -1897,11 +1911,15 @@ function syncTeamsFromRegistrations(list){
       roster:(ov&&ov.roster)||t.roster,
     });
   });
+  [...new Set(TEAMS.map(t=>t.g))].filter(Boolean).forEach(ensureGroupSchedule);
+  assignMatchIds();
   const activeFilter=document.querySelector('.filter-btn.active');
   if(document.getElementById('teamsGrid'))renderTeams(activeFilter?activeFilter.dataset.g:'all');
   if(document.getElementById('groupsRoot'))renderGroups();
   if(document.getElementById('groupResultsAll'))renderGroupResults();
+  if(document.getElementById('homeMatches'))renderHomeMatches();
   if(document.getElementById('rosterTeamSelect')&&typeof ADMIN!=='undefined')ADMIN.renderRosterEditor();
+  if(document.getElementById('resultsEditor')&&typeof ADMIN!=='undefined')ADMIN.renderResultsEditor();
 }
 const DRAW_CEREMONY={
   _cardHTML(t){
