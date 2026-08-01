@@ -1,8 +1,9 @@
 {
   "584658272": {
-    "step": "captain",
+    "step": "phone",
     "data": {
-      "name": "/clear"
+      "name": "/clear",
+      "captain": "|clear"
     }
   }
 }
