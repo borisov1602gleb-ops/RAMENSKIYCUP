@@ -834,6 +834,25 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 .ed-match input[type="number"]{width:52px;text-align:center;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 4px}
 .ed-match input[type="text"]{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 10px;min-width:0}
 .ed-live{display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:.62rem;color:var(--red);flex-shrink:0;cursor:pointer}
+.be-round-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fx-add{font-size:.64rem;padding:5px 10px;border-radius:8px}
+.ed-match.fx-row{flex-wrap:wrap}
+.fx-teams{display:flex;align-items:center;gap:6px;flex:1 1 220px;min-width:0}
+.fx-teams select{flex:1;min-width:0}
+.fx-meta{display:flex;gap:6px;flex-wrap:wrap}
+.fx-meta input{width:78px}
+.fx-del{background:none;border:none;color:var(--muted);font-size:.9rem;cursor:pointer;flex-shrink:0;padding:2px 6px}
+.fx-del:hover{color:var(--red)}
+.pfe-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px}
+.pfe-chip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:grab}
+.pfe-chip:active{cursor:grabbing}
+.pfe-seed{font-family:var(--f-mono);font-size:.62rem;color:var(--gold-lt);background:rgba(224,181,63,.14);border-radius:6px;padding:2px 5px}
+.pfe-match{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.pfe-slot{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px dashed var(--line-2);border-radius:8px;padding:8px 10px;cursor:grab}
+.pfe-slot.empty{color:var(--muted);font-style:italic;cursor:default}
+.pfe-slot.over{border-color:var(--emerald-lt);background:var(--emerald-glow)}
+.pfe-slot .pfe-name{flex:1;min-width:0;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfe-slot input{width:48px;text-align:center;background:var(--panel-2);border:1px solid var(--line-2);border-radius:6px;color:var(--text);font-size:.8rem;padding:5px 4px}
 .ed-del{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line-2);color:var(--muted);font-size:.8rem}
 .ed-del:hover{color:var(--red);border-color:var(--red)}
 .ed-news{margin-bottom:14px}
@@ -1292,8 +1311,8 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         </div>
 
         <div class="ad-pane" data-pane="results">
-          <h4>Результаты матчей (группы)</h4>
-          <p style="margin-bottom:14px;color:var(--muted)">Введите счёт — турнирные таблицы, форма команд и «Ближайшие матчи» на главной пересчитаются автоматически. Пустой счёт = матч не сыгран.</p>
+          <h4>Матчи и результаты (группы)</h4>
+          <p style="margin-bottom:14px;color:var(--muted)">Кнопкой «+ Матч» добавьте игру в нужную группу, выберите соперников. Счёт — турнирные таблицы, форма команд и «Ближайшие матчи» пересчитаются автоматически. Пустой счёт = матч не сыгран.</p>
           <div id="resultsEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveResults()">Сохранить результаты (предпросмотр)</button>
           <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй результаты» — закреплю для всех.</div>
@@ -1324,7 +1343,9 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
         <div class="ad-pane" data-pane="bracket">
           <h4>Сетка плей-офф</h4>
-          <p style="margin-bottom:14px;color:var(--muted)">Впишите названия команд и счёт в каждой паре — победитель подсветится сам, как только оба счёта заполнены.</p>
+          <p style="margin-bottom:14px;color:var(--muted)">Перетащите команду из пула квалифицировавшихся в нужный слот сетки — или нажмите «Сформировать сетку», она расставит 1 и 2 места групп автоматически. Счёт вводится прямо в слоте, победитель подсветится сам.</p>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:12px" onclick="ADMIN.autoFillBracket()">🎲 Сформировать сетку по группам</button>
+          <div id="bracketPool" class="pfe-pool"></div>
           <div id="bracketEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveBracket()">Сохранить сетку (предпросмотр)</button>
           <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй сетку плей-офф» — закреплю для всех посетителей.</div>
@@ -1369,8 +1390,11 @@ const PLAYOFF_MATCHES=[];
 /* Календарь групп — единственный источник данных: таблицы, форма команд
    и «ближайшие матчи» на главной считаются из счётов автоматически */
 const GROUP_MATCHES={};
-Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach((m,i)=>{m.id=L+i}));
-PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
+function assignMatchIds(){
+  Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach((m,i)=>{m.id=L+i}));
+  PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
+}
+assignMatchIds();
 function findMatchById(id){
   for(const L of Object.keys(GROUP_MATCHES)){const f=GROUP_MATCHES[L].find(m=>m.id===id);if(f)return f}
   return PLAYOFF_MATCHES.find(m=>m.id===id);
@@ -1405,6 +1429,31 @@ function getGroupStandings(){
   const out={};
   letters.forEach(L=>{out[L]=computeStandings(L)});
   return out;
+}
+/* ФОРМИРОВАНИЕ СЕТКИ ПЛЕЙ-ОФФ ИЗ ГРУПП */
+function computeQualifiers(){
+  const standings=getGroupStandings();
+  const letters=Object.keys(standings).sort();
+  const out=[];
+  letters.forEach(L=>{
+    const rows=standings[L];
+    if(rows[0])out.push({n:rows[0].n,c:rows[0].c,seed:`1${L}`,rank:0});
+    if(rows[1])out.push({n:rows[1].n,c:rows[1].c,seed:`2${L}`,rank:1});
+  });
+  return out;
+}
+function pairQualifiers(quals){
+  const firsts=quals.filter(q=>q.rank===0);
+  const seconds=quals.filter(q=>q.rank===1);
+  const rotated=seconds.length?[...seconds.slice(1),seconds[0]]:[];
+  return firsts.map((f,i)=>[f,rotated[i]||null]);
+}
+function bracketSkeleton(n){
+  const blank=()=>[['',0,0],['',0,0]];
+  if(n<=1)return [{h:'🏆 Финал',fin:1,m:[blank()]}];
+  if(n===2)return [{h:'1/2 финала',m:[blank(),blank()]},{h:'🏆 Финал',fin:1,m:[blank()]}];
+  if(n===4)return [{h:'1/4 финала',m:[blank(),blank(),blank(),blank()]},{h:'1/2 финала',m:[blank(),blank()]},{h:'🏆 Финал',fin:1,m:[blank()]}];
+  return [{h:'Плей-офф · 1 раунд',m:Array.from({length:n},blank)}];
 }
 function upcomingFromGroups(){
   const out=[];
@@ -2361,67 +2410,154 @@ const ADMIN={
     return false;
   },
   renderBracketEditor(){
+    const poolEl=document.getElementById('bracketPool');
     const root=document.getElementById('bracketEditor');if(!root)return;
+    const quals=computeQualifiers();
+    if(poolEl){
+      poolEl.innerHTML=quals.length?quals.map(q=>`
+        <div class="pfe-chip" draggable="true" ondragstart="ADMIN.chipDragStart(event,'${q.n.replace(/'/g,"\\'")}')">
+          <span class="pfe-seed">${q.seed}</span>${q.n}
+        </div>`).join('')
+        :'<div class="admin-note">Нет данных о группах — сначала проведите жеребьёвку (и, по желанию, внесите результаты групп).</div>';
+    }
+    if(!BRACKET.length){
+      root.innerHTML='<div class="admin-note">Сетка пуста. Нажмите «Сформировать сетку» выше.</div>';
+      return;
+    }
     root.innerHTML=BRACKET.map((round,ri)=>`
       <div class="be-round">
         <div class="be-round-h">${round.h}</div>
         ${round.m.map((pair,mi)=>`
-          <div class="be-match">
+          <div class="pfe-match">
             ${pair.map((tm,si)=>`
-              <div class="be-side">
-                <input type="text" value="${tm[0]}" data-r="${ri}" data-m="${mi}" data-s="${si}" data-f="name">
-                <input type="text" value="${tm[1]}" data-r="${ri}" data-m="${mi}" data-s="${si}" data-f="score">
+              <div class="pfe-slot ${tm[0]?'':'empty'}" draggable="${tm[0]?'true':'false'}"
+                   ondragstart="ADMIN.slotDragStart(event,${ri},${mi},${si})"
+                   ondragover="event.preventDefault();this.classList.add('over')"
+                   ondragleave="this.classList.remove('over')"
+                   ondrop="ADMIN.slotDrop(event,${ri},${mi},${si})">
+                <span class="pfe-name">${tm[0]||'Перетащите команду сюда'}</span>
+                <input type="number" min="0" value="${tm[1]||''}" data-r="${ri}" data-m="${mi}" data-s="${si}" onclick="event.stopPropagation()">
+                ${tm[0]?`<button class="fx-del" onclick="event.stopPropagation();ADMIN.clearSlot(${ri},${mi},${si})">✕</button>`:''}
               </div>`).join('')}
           </div>`).join('')}
       </div>`).join('');
   },
+  chipDragStart(e,name){this._dragName=name;e.dataTransfer.effectAllowed='copy'},
+  slotDragStart(e,r,m,s){this._dragName=BRACKET[r].m[m][s][0];e.dataTransfer.effectAllowed='move'},
+  slotDrop(e,r,m,s){
+    e.preventDefault();
+    e.currentTarget.classList.remove('over');
+    if(!this._dragName)return;
+    BRACKET[r].m[m][s][0]=this._dragName;
+    this._dragName=null;
+    this.renderBracketEditor();
+  },
+  clearSlot(r,m,s){
+    BRACKET[r].m[m][s][0]='';
+    BRACKET[r].m[m][s][1]=0;
+    this.renderBracketEditor();
+  },
+  autoFillBracket(){
+    const quals=computeQualifiers();
+    if(quals.length<2){
+      alert('Нужно минимум 2 команды, прошедшие из групп. Сначала проведите жеребьёвку.');
+      return;
+    }
+    const pairs=pairQualifiers(quals);
+    BRACKET.length=0;
+    BRACKET.push(...bracketSkeleton(pairs.length));
+    pairs.forEach((pair,i)=>{
+      BRACKET[0].m[i][0][0]=pair[0]?pair[0].n:'';
+      BRACKET[0].m[i][1][0]=pair[1]?pair[1].n:'';
+    });
+    assignMatchIds();
+    this.renderBracketEditor();
+  },
   saveBracket(){
-    document.querySelectorAll('#bracketEditor input').forEach(inp=>{
+    document.querySelectorAll('#bracketEditor input[type="number"]').forEach(inp=>{
       const r=+inp.dataset.r,m=+inp.dataset.m,s=+inp.dataset.s;
-      if(inp.dataset.f==='name')BRACKET[r].m[m][s][0]=inp.value;
-      else BRACKET[r].m[m][s][1]=inp.value;
+      BRACKET[r].m[m][s][1]=inp.value===''?0:+inp.value;
     });
     BRACKET.forEach(round=>round.m.forEach(pair=>{
       const na=parseFloat(pair[0][1]),nb=parseFloat(pair[1][1]);
-      if(!isNaN(na)&&!isNaN(nb)){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
+      if(!isNaN(na)&&!isNaN(nb)&&pair[0][0]&&pair[1][0]){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
     }));
+    assignMatchIds();
+    localStorage.setItem('rkch_bracket_preview',JSON.stringify(BRACKET));
     renderBracket('bracket');
     renderBracket('bracketPlayoffMain');
     this.renderBracketEditor();
   },
+  realGroupLetters(){return [...new Set(TEAMS.map(t=>t.g))].filter(Boolean).sort()},
+  addMatch(L){
+    const teamsInGroup=TEAMS.filter(t=>t.g===L);
+    if(teamsInGroup.length<2)return;
+    if(!GROUP_MATCHES[L])GROUP_MATCHES[L]=[];
+    const a=teamsInGroup[0],b=teamsInGroup[1]||teamsInGroup[0];
+    GROUP_MATCHES[L].push({d:'',t:'',a:a.n,b:b.n,ca:a.c,cb:b.c,f:'',sc:null});
+    assignMatchIds();
+    this.renderResultsEditor();
+  },
+  removeMatch(L,i){
+    GROUP_MATCHES[L].splice(i,1);
+    assignMatchIds();
+    this.renderResultsEditor();
+  },
   renderResultsEditor(){
     const root=document.getElementById('resultsEditor');if(!root)return;
-    root.innerHTML=Object.keys(GROUP_MATCHES).map(L=>`
+    const letters=this.realGroupLetters();
+    if(!letters.length){
+      root.innerHTML='<div class="admin-note">Сначала проведите жеребьёвку — матчи можно добавлять только внутри реальных групп.</div>';
+      return;
+    }
+    root.innerHTML=letters.map(L=>{
+      const teamsInGroup=TEAMS.filter(t=>t.g===L);
+      const teamOpts=t=>teamsInGroup.map(x=>`<option value="${x.n}" ${x.n===t?'selected':''}>${x.n}</option>`).join('');
+      return `
       <div class="be-round">
-        <div class="be-round-h">Группа ${L}</div>
-        ${GROUP_MATCHES[L].map((m,i)=>{
+        <div class="be-round-h">Группа ${L}<button class="btn btn-ghost fx-add" onclick="ADMIN.addMatch('${L}')">+ Матч</button></div>
+        ${(GROUP_MATCHES[L]||[]).map((m,i)=>{
           const s=parseScore(m.sc)||['',''];
-          return `<div class="ed-match">
-            <span class="ed-names">${m.a} — ${m.b}</span>
-            <input type="number" min="0" value="${s[0]}" data-g="${L}" data-i="${i}" data-f="a">
-            <input type="number" min="0" value="${s[1]}" data-g="${L}" data-i="${i}" data-f="b">
+          return `<div class="ed-match fx-row">
+            <div class="fx-teams">
+              <select data-g="${L}" data-i="${i}" data-f="a">${teamOpts(m.a)}</select>
+              <span>—</span>
+              <select data-g="${L}" data-i="${i}" data-f="b">${teamOpts(m.b)}</select>
+            </div>
+            <div class="fx-meta">
+              <input type="text" placeholder="дата" value="${m.d||''}" data-g="${L}" data-i="${i}" data-f="d">
+              <input type="text" placeholder="время" value="${m.t||''}" data-g="${L}" data-i="${i}" data-f="t">
+              <input type="text" placeholder="площадка" value="${m.f||''}" data-g="${L}" data-i="${i}" data-f="f">
+            </div>
+            <input type="number" min="0" value="${s[0]}" data-g="${L}" data-i="${i}" data-f="sca">
+            <input type="number" min="0" value="${s[1]}" data-g="${L}" data-i="${i}" data-f="scb">
             <label class="ed-live"><input type="checkbox" data-g="${L}" data-i="${i}" data-f="live" ${m.live?'checked':''}>LIVE</label>
-          </div>`}).join('')}
-      </div>`).join('');
+            <button class="fx-del" onclick="ADMIN.removeMatch('${L}',${i})">✕</button>
+          </div>`}).join('')||'<div class="admin-note">Пока нет матчей в этой группе.</div>'}
+      </div>`}).join('');
   },
   saveResults(){
-    document.querySelectorAll('#resultsEditor input').forEach(inp=>{
+    document.querySelectorAll('#resultsEditor select, #resultsEditor input').forEach(inp=>{
       const m=GROUP_MATCHES[inp.dataset.g][+inp.dataset.i];
       if(inp.dataset.f==='live')m.live=inp.checked;
-      else m['_'+inp.dataset.f]=inp.value;
+      else if(inp.dataset.f==='a'){m.a=inp.value;m.ca=(TEAMS.find(t=>t.n===inp.value)||{}).c||m.ca}
+      else if(inp.dataset.f==='b'){m.b=inp.value;m.cb=(TEAMS.find(t=>t.n===inp.value)||{}).c||m.cb}
+      else if(inp.dataset.f==='sca')m._sca=inp.value;
+      else if(inp.dataset.f==='scb')m._scb=inp.value;
+      else m[inp.dataset.f]=inp.value;
     });
     Object.values(GROUP_MATCHES).forEach(ms=>ms.forEach(m=>{
-      if(m._a!==undefined){
-        m.sc=(m._a!==''&&m._b!=='')?`${m._a} : ${m._b}`:null;
-        delete m._a;delete m._b;
+      if(m._sca!==undefined){
+        m.sc=(m._sca!==''&&m._scb!=='')?`${m._sca} : ${m._scb}`:null;
+        delete m._sca;delete m._scb;
       }
       if(m.sc&&!m.live)m.live=false;
     }));
-    const dump={};
-    Object.keys(GROUP_MATCHES).forEach(L=>{dump[L]=GROUP_MATCHES[L].map(m=>({sc:m.sc||null,live:!!m.live}))});
-    localStorage.setItem('rkch_results_preview',JSON.stringify(dump));
+    assignMatchIds();
+    localStorage.setItem('rkch_results_preview',JSON.stringify(GROUP_MATCHES));
     renderGroups();renderGroupResults();renderHomeMatches();
     this.renderResultsEditor();
+    this.renderMatchCenter();
   },
   renderScorersEditor(){
     const root=document.getElementById('scorersEditor');if(!root)return;
@@ -2601,7 +2737,9 @@ const ADMIN={
 (function(){
   try{
     const r=JSON.parse(localStorage.getItem('rkch_results_preview')||'null');
-    if(r)Object.keys(r).forEach(L=>{(GROUP_MATCHES[L]||[]).forEach((m,i)=>{if(r[L][i]){m.sc=r[L][i].sc;m.live=r[L][i].live}})});
+    if(r){Object.keys(r).forEach(L=>{GROUP_MATCHES[L]=r[L]});assignMatchIds()}
+    const bp=JSON.parse(localStorage.getItem('rkch_bracket_preview')||'null');
+    if(bp){BRACKET.length=0;BRACKET.push(...bp);assignMatchIds();renderBracket('bracket');renderBracket('bracketPlayoffMain')}
     const s=JSON.parse(localStorage.getItem('rkch_scorers_preview')||'null');
     if(s)SCORERS=s;
     const n=JSON.parse(localStorage.getItem('rkch_news_preview')||'null');
