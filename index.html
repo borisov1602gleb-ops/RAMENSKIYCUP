@@ -312,8 +312,11 @@ main{padding-top:0}
 .pitch-box.bot{border-bottom:none}
 .pitch-half{position:relative;display:flex;flex-direction:column;justify-content:space-around;gap:16px;padding:18px 10px;z-index:1;flex:1}
 .pitch-row{display:flex;justify-content:space-evenly;gap:6px}
-.pp{display:flex;flex-direction:column;align-items:center;gap:4px;width:64px}
-.pp .no{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-weight:800;font-size:.78rem;color:#fff;border:2px solid rgba(255,255,255,.85);box-shadow:0 3px 8px rgba(0,0,0,.4);flex-shrink:0}
+.pp{display:flex;flex-direction:column;align-items:center;gap:3px;width:64px}
+.pp .jersey{position:relative;width:38px;height:40px;flex-shrink:0}
+.pp .jersey svg{width:100%;height:100%;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
+.pp .jersey-no{position:absolute;top:56%;left:50%;transform:translate(-50%,-50%);font-family:var(--f-head);font-weight:800;font-size:.85rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.pp .cap-badge{position:absolute;top:-5px;right:-4px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#1a1408;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 6px var(--gold-glow),0 0 0 2px rgba(0,0,0,.5)}
 .pp .nm{font-size:.66rem;color:#fff;text-align:center;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* хронология */
@@ -853,6 +856,11 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 .pfe-slot.over{border-color:var(--emerald-lt);background:var(--emerald-glow)}
 .pfe-slot .pfe-name{flex:1;min-width:0;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pfe-slot input{width:48px;text-align:center;background:var(--panel-2);border:1px solid var(--line-2);border-radius:6px;color:var(--text);font-size:.8rem;padding:5px 4px}
+.rp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.rp-row input[type="number"]{width:44px;text-align:center;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 4px}
+.rp-row input[type="text"]{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.82rem;padding:7px 10px}
+.rp-row select{background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font-size:.78rem;padding:7px 6px;flex-shrink:0}
+.rp-cap{display:flex;align-items:center;gap:4px;font-family:var(--f-mono);font-size:.62rem;color:var(--gold-lt);flex-shrink:0;cursor:pointer;white-space:nowrap}
 .ed-del{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line-2);color:var(--muted);font-size:.8rem}
 .ed-del:hover{color:var(--red);border-color:var(--red)}
 .ed-news{margin-bottom:14px}
@@ -1274,6 +1282,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <button class="ad-nav-btn" data-tab="draw" onclick="ADMIN.switchTab('draw')"><span>🎲</span>Жеребьёвка</button>
         <button class="ad-nav-btn" data-tab="results" onclick="ADMIN.switchTab('results')"><span>⚽</span>Результаты матчей</button>
         <button class="ad-nav-btn" data-tab="matchcenter" onclick="ADMIN.switchTab('matchcenter')"><span>🏅</span>Матч-центр</button>
+        <button class="ad-nav-btn" data-tab="roster" onclick="ADMIN.switchTab('roster')"><span>👕</span>Составы команд</button>
         <button class="ad-nav-btn" data-tab="scorers" onclick="ADMIN.switchTab('scorers')"><span>🥅</span>Бомбардиры</button>
         <button class="ad-nav-btn" data-tab="news" onclick="ADMIN.switchTab('news')"><span>📰</span>Новости</button>
         <button class="ad-nav-btn" data-tab="bracket" onclick="ADMIN.switchTab('bracket')"><span>🏆</span>Сетка плей-офф</button>
@@ -1320,6 +1329,17 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <div id="mcEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveMatchCenter()">Сохранить (предпросмотр)</button>
           <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй MVP и хронологию» — закреплю для всех.</div>
+        </div>
+
+        <div class="ad-pane" data-pane="roster">
+          <h4>Составы команд</h4>
+          <p style="margin-bottom:14px;color:var(--muted)">Меняйте номера, позиции (это и есть схема — какой ряд игрок занимает на поле), капитана и цвет маек. Отображается в карточке матча и на финале.</p>
+          <div class="admin-field"><label>Команда</label><select id="rosterTeamSelect" onchange="ADMIN.selectRosterTeam(this.value)"></select></div>
+          <div class="admin-field"><label>Цвет маек</label><input type="color" id="rosterColor" style="width:100%;height:40px;border-radius:8px;border:1px solid var(--line-2);background:var(--panel)"></div>
+          <div id="rosterEditor"></div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin:8px 0" onclick="ADMIN.addRosterPlayer()">+ Добавить игрока</button>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="ADMIN.saveRoster()">Сохранить состав (предпросмотр)</button>
+          <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй составы» — закреплю для всех посетителей.</div>
         </div>
 
         <div class="ad-pane" data-pane="scorers">
@@ -1624,12 +1644,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')REG_WIZARD.close()})
 
 /* КАРТОЧКА МАТЧА: состав на поле (7+1) + хронология + MVP */
 const POS_ROWS=['GK','DEF','MID','FWD'];
-function pitchRowsHTML(roster,color,reverse){
+function jerseySVG(color){
+  return `<svg viewBox="0 0 44 46"><path d="M14 2 L2 9 L7 19 L14 15 V44 H30 V15 L37 19 L42 9 L30 2 C30 7 26.5 9.5 22 9.5 C17.5 9.5 14 7 14 2 Z" fill="${color}" stroke="rgba(255,255,255,.3)" stroke-width="1.3"/></svg>`;
+}
+function pitchRowsHTML(roster,color,reverse,capName){
   const by={GK:[],DEF:[],MID:[],FWD:[]};
   (roster||[]).forEach(p=>{if(by[p[2]])by[p[2]].push(p)});
   const order=reverse?[...POS_ROWS].reverse():POS_ROWS;
   return order.map(pos=>`<div class="pitch-row">${by[pos].map(p=>`
-    <div class="pp"><span class="no" style="background:${color}">${p[0]}</span><span class="nm">${p[1]}</span></div>`).join('')}</div>`).join('');
+    <div class="pp">
+      <span class="jersey">${jerseySVG(color)}<span class="jersey-no">${p[0]}</span>${capName&&p[1]===capName?'<span class="cap-badge">C</span>':''}</span>
+      <span class="nm">${p[1]}</span>
+    </div>`).join('')}</div>`).join('');
 }
 const EVENT_ICON={goal:'⚽',yellow:'🟨',red:'🟥'};
 const MATCH_MODAL={
@@ -1651,9 +1677,9 @@ const MATCH_MODAL={
     document.getElementById('mmBody').innerHTML=`
       <div class="pitch">
         <div class="pitch-box top"></div>
-        <div class="pitch-half top">${pitchRowsHTML(ta&&ta.roster,ta?ta.c:'#666',false)}</div>
+        <div class="pitch-half top">${pitchRowsHTML(ta&&ta.roster,ta?ta.c:'#666',false,ta&&ta.cap)}</div>
         <div class="pitch-mid-wrap"><div class="pitch-mid"></div><div class="pitch-circle"></div></div>
-        <div class="pitch-half bot">${pitchRowsHTML(tb&&tb.roster,tb?tb.c:'#666',true)}</div>
+        <div class="pitch-half bot">${pitchRowsHTML(tb&&tb.roster,tb?tb.c:'#666',true,tb&&tb.cap)}</div>
         <div class="pitch-box bot"></div>
       </div>
       <div class="mm-timeline-h">Хронология матча</div>
@@ -1712,9 +1738,9 @@ function renderFinalStage(){
     <div class="final-lineups-h">Стартовые составы</div>
     <div class="pitch">
       <div class="pitch-box top"></div>
-      <div class="pitch-half top">${pitchRowsHTML(ta&&ta.roster,ta?ta.c:'#666',false)}</div>
+      <div class="pitch-half top">${pitchRowsHTML(ta&&ta.roster,ta?ta.c:'#666',false,ta&&ta.cap)}</div>
       <div class="pitch-mid-wrap"><div class="pitch-mid"></div><div class="pitch-circle"></div></div>
-      <div class="pitch-half bot">${pitchRowsHTML(tb&&tb.roster,tb?tb.c:'#666',true)}</div>
+      <div class="pitch-half bot">${pitchRowsHTML(tb&&tb.roster,tb?tb.c:'#666',true,tb&&tb.cap)}</div>
       <div class="pitch-box bot"></div>
     </div>`;
 }
@@ -1860,14 +1886,22 @@ loadRegisteredTeams().then(list=>{
 const DRAW_API_BASE='https://ramenskiycup.vercel.app';
 function syncTeamsFromRegistrations(list){
   const grouped=(list||[]).filter(t=>t.group);
+  const rosterPreview=JSON.parse(localStorage.getItem('rkch_roster_preview')||'{}');
   TEAMS.length=0;
   grouped.forEach(t=>{
-    TEAMS.push({n:t.name,g:t.group,c:hashColor(t.name),st:'ok',cap:t.captain,roster:t.roster,logo:t.logo});
+    const ov=rosterPreview[t.id];
+    TEAMS.push({
+      id:t.id,n:t.name,g:t.group,st:'ok',logo:t.logo,
+      c:(ov&&ov.color)||hashColor(t.name),
+      cap:(ov&&ov.cap)||t.captain,
+      roster:(ov&&ov.roster)||t.roster,
+    });
   });
   const activeFilter=document.querySelector('.filter-btn.active');
   if(document.getElementById('teamsGrid'))renderTeams(activeFilter?activeFilter.dataset.g:'all');
   if(document.getElementById('groupsRoot'))renderGroups();
   if(document.getElementById('groupResultsAll'))renderGroupResults();
+  if(document.getElementById('rosterTeamSelect')&&typeof ADMIN!=='undefined')ADMIN.renderRosterEditor();
 }
 const DRAW_CEREMONY={
   _cardHTML(t){
@@ -2322,7 +2356,7 @@ const ADMIN={
   },
   openConsole(){
     document.getElementById('adminConsole').classList.add('open');
-    this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor();this.renderMatchCenter();
+    this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor();this.renderMatchCenter();this.renderRosterEditor();
     this.switchTab(this._activeTab||'stages');
   },
   switchTab(name){
@@ -2484,6 +2518,76 @@ const ADMIN={
     this.renderBracketEditor();
   },
   realGroupLetters(){return [...new Set(TEAMS.map(t=>t.g))].filter(Boolean).sort()},
+  renderRosterEditor(){
+    const sel=document.getElementById('rosterTeamSelect');if(!sel)return;
+    const prevId=sel.value;
+    sel.innerHTML=TEAMS.map(t=>`<option value="${t.id}">${t.n} (группа ${t.g})</option>`).join('');
+    if(!TEAMS.length){
+      document.getElementById('rosterEditor').innerHTML='<div class="admin-note">Сначала проведите жеребьёвку — составы редактируются только у реальных команд.</div>';
+      return;
+    }
+    const pick=TEAMS.find(t=>t.id===prevId)?prevId:TEAMS[0].id;
+    sel.value=pick;
+    this.selectRosterTeam(pick);
+  },
+  selectRosterTeam(id){
+    this._rosterTeamId=id;
+    const t=TEAMS.find(x=>x.id===id);if(!t)return;
+    document.getElementById('rosterColor').value=this._toHex(t.c);
+    const root=document.getElementById('rosterEditor');
+    root.innerHTML=t.roster.map((p,i)=>`
+      <div class="rp-row">
+        <input type="number" min="0" max="99" value="${p[0]}" data-i="${i}" data-f="no">
+        <input type="text" value="${p[1]}" data-i="${i}" data-f="name">
+        <select data-i="${i}" data-f="pos">
+          ${POS_ROWS.map(pos=>`<option value="${pos}" ${p[2]===pos?'selected':''}>${POS_LABELS[pos]||pos}</option>`).join('')}
+        </select>
+        <label class="rp-cap"><input type="radio" name="rpCap" value="${i}" ${t.cap===p[1]?'checked':''}>C</label>
+        <button class="fx-del" onclick="ADMIN.removeRosterPlayer(${i})">✕</button>
+      </div>`).join('');
+  },
+  _toHex(c){
+    if(!c)return '#34a66e';
+    if(c[0]==='#')return c;
+    const m=/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/.exec(c);
+    if(!m)return '#34a66e';
+    const h=+m[1]/360,s=+m[2]/100,l=+m[3]/100;
+    const k=n=>(n+h*12)%12;
+    const a=s*Math.min(l,1-l);
+    const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+    const toHex=x=>Math.round(x*255).toString(16).padStart(2,'0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  },
+  addRosterPlayer(){
+    const t=TEAMS.find(x=>x.id===this._rosterTeamId);if(!t)return;
+    t.roster.push([1,'Новый игрок','MID']);
+    this.selectRosterTeam(this._rosterTeamId);
+  },
+  removeRosterPlayer(i){
+    const t=TEAMS.find(x=>x.id===this._rosterTeamId);if(!t)return;
+    t.roster.splice(i,1);
+    this.selectRosterTeam(this._rosterTeamId);
+  },
+  saveRoster(){
+    const t=TEAMS.find(x=>x.id===this._rosterTeamId);if(!t)return;
+    let capName=null;
+    document.querySelectorAll('#rosterEditor input').forEach(inp=>{
+      const i=+inp.dataset.i;
+      if(inp.dataset.f==='no')t.roster[i][0]=+inp.value||0;
+      else if(inp.dataset.f==='name')t.roster[i][1]=inp.value;
+    });
+    document.querySelectorAll('#rosterEditor select').forEach(sl=>{t.roster[+sl.dataset.i][2]=sl.value});
+    const capRadio=document.querySelector('#rosterEditor input[name="rpCap"]:checked');
+    if(capRadio)capName=t.roster[+capRadio.value][1];
+    t.cap=capName;
+    t.c=document.getElementById('rosterColor').value;
+    const preview=JSON.parse(localStorage.getItem('rkch_roster_preview')||'{}');
+    preview[t.id]={roster:t.roster,color:t.c,cap:t.cap};
+    localStorage.setItem('rkch_roster_preview',JSON.stringify(preview));
+    this.selectRosterTeam(t.id);
+    renderTeams(document.querySelector('.filter-btn.active')?.dataset.g||'all');
+    renderGroups();renderGroupResults();
+  },
   addMatch(L){
     const teamsInGroup=TEAMS.filter(t=>t.g===L);
     if(teamsInGroup.length<2)return;
