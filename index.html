@@ -358,6 +358,15 @@ main{padding-top:0}
 .tm-head h2{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.3rem;letter-spacing:.02em}
 .tm-head .team-grp{margin-top:4px}
 .tm-close{position:absolute;top:20px;right:20px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:.9rem}
+.mm-print{position:absolute;top:20px;right:64px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:.95rem;background:none;cursor:pointer}
+.mm-print:hover{color:var(--gold-lt);border-color:var(--gold-lt)}
+@media print{
+  body *{visibility:hidden}
+  .match-modal.open,.match-modal.open *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .match-modal.open{position:absolute;inset:0;padding:0;background:#fff!important}
+  .match-modal.open .team-modal{width:100%;max-width:none;box-shadow:none;border:none;margin:0}
+  .match-modal.open .mm-print,.match-modal.open .tm-close,.match-modal.open .mm-timeline-h,.match-modal.open .mm-timeline,.match-modal.open .mm-empty{display:none!important}
+}
 .tm-close:hover{color:var(--text);border-color:var(--muted)}
 .tm-body{padding:10px 32px 32px}
 .tm-cap-line{display:flex;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:22px;font-size:.95rem}
@@ -561,6 +570,15 @@ body.loading .hero h1 .l1>span,body.loading .hero h1 .l2>span{animation-play-sta
 .tk b{font-weight:inherit}
 .tk b.o{color:transparent;-webkit-text-stroke:1px var(--muted)}
 @keyframes tick{to{transform:translateX(-50%)}}
+.team-ticker{border-bottom:1px solid var(--line);background:var(--bg);overflow:hidden;padding:20px 0}
+.team-ticker-track{display:flex;width:max-content;animation:teamTick 40s linear infinite}
+.team-ticker:hover .team-ticker-track{animation-play-state:paused}
+@keyframes teamTick{to{transform:translateX(-50%)}}
+.tt-item{display:flex;align-items:center;gap:10px;padding:0 26px;flex-shrink:0}
+.tt-item .tt-shield{width:32px;height:38px;flex-shrink:0;display:block}
+.tt-item .tt-shield svg{width:100%;height:100%}
+.tt-item .tt-shield img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.tt-item b{font-family:var(--f-head);font-weight:800;font-size:.9rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;color:var(--text)}
 
 /* ПРИЁМ: spotlight-карточки (свет за курсором) */
 .spot{position:relative}
@@ -1011,6 +1029,10 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
   <div class="ticker"><div class="ticker-track" id="tickTrack"></div></div>
 
+  <div class="team-ticker" id="teamTicker" style="display:none">
+    <div class="team-ticker-track" id="teamTickTrack"></div>
+  </div>
+
   <div class="stats">
     <div class="container wide">
       <div class="stats-grid">
@@ -1346,9 +1368,8 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
         <div class="ad-pane" data-pane="scorers">
           <h4>Бомбардиры</h4>
+          <p style="margin-bottom:14px;color:var(--muted)">Список считается автоматически из голов, внесённых во вкладке «Матч-центр» — отдельно вводить ничего не нужно.</p>
           <div id="scorersEditor"></div>
-          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px" onclick="ADMIN.addScorer()">+ Добавить игрока</button>
-          <button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="ADMIN.saveScorers()">Сохранить бомбардиров (предпросмотр)</button>
         </div>
 
         <div class="ad-pane" data-pane="news">
@@ -1412,6 +1433,21 @@ function assignMatchIds(){
   PLAYOFF_MATCHES.forEach((m,i)=>{m.id='P'+i});
 }
 assignMatchIds();
+/* Бомбардиры считаются из событий матчей (Матч-центр), а не ведутся отдельным списком */
+function computeScorersFromEvents(){
+  const tally={};
+  const allMatches=[...Object.values(GROUP_MATCHES).flat(),...PLAYOFF_MATCHES];
+  allMatches.forEach(m=>{
+    (m.events||[]).forEach(e=>{
+      if(e.type!=='goal'||!e.player)return;
+      const team=e.team==='a'?m.a:m.b;
+      const key=e.player+'|'+team;
+      if(!tally[key])tally[key]={n:e.player,team,g:0};
+      tally[key].g++;
+    });
+  });
+  return Object.values(tally).sort((a,b)=>b.g-a.g);
+}
 /* Автогенерация расписания группы: круговой турнир (каждый с каждым),
    даты/время/площадку и соперников можно потом менять в админке. */
 function ensureGroupSchedule(L){
@@ -1430,7 +1466,6 @@ function findMatchById(id){
   for(const L of Object.keys(GROUP_MATCHES)){const f=GROUP_MATCHES[L].find(m=>m.id===id);if(f)return f}
   return PLAYOFF_MATCHES.find(m=>m.id===id);
 }
-let SCORERS=[];
 let NEWS=[
   {d:"20 АПР",title:"Сыгран второй тур группового этапа",text:"«Верея Атлетик» разгромила «Никоновское» 5:0 и почти гарантировала себе первое место в группе D."},
   {d:"14 АПР",title:"Открыта продажа атрибутики",text:"Шарфы и футболки турнира можно приобрести у волонтёров на стадионе «Сатурн» в дни матчей."},
@@ -1680,6 +1715,7 @@ const MATCH_MODAL={
     const ta=findTeamByName(m.a),tb=findTeamByName(m.b);
     const s=parseScore(m.sc);
     document.getElementById('mmHead').innerHTML=`
+      <button class="mm-print" onclick="MATCH_MODAL.print()" title="Печать карточки матча">🖨</button>
       <button class="tm-close" onclick="MATCH_MODAL.close()">✕</button>
       <div style="flex:1;text-align:center">
         <div class="mm-teams" style="justify-content:center">
@@ -1708,7 +1744,8 @@ const MATCH_MODAL={
   close(){
     document.getElementById('matchModal').classList.remove('open');
     document.body.style.overflow='';
-  }
+  },
+  print(){window.print()}
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')MATCH_MODAL.close()});
 
@@ -1867,6 +1904,21 @@ async function loadRegisteredTeams(){
     return null;
   }
 }
+function renderTeamTicker(list){
+  const wrap=document.getElementById('teamTicker');
+  const track=document.getElementById('teamTickTrack');
+  if(!wrap||!track)return;
+  if(!list||!list.length){wrap.style.display='none';return}
+  const itemHTML=t=>{
+    const crest=t.logo
+      ?`<span class="tt-shield"><img src="${t.logo}" alt="${t.name}" loading="lazy"></span>`
+      :`<span class="tt-shield">${shieldSVG(hashColor(t.name),sid++)}</span>`;
+    return `<span class="tt-item">${crest}<b>${t.name}</b></span>`;
+  };
+  const set=list.map(itemHTML).join('');
+  track.innerHTML=set+set;
+  wrap.style.display='';
+}
 function regTeamCardHTML(t){
   const crest=t.logo
     ?`<img src="${t.logo}" alt="${t.name}" loading="lazy">`
@@ -1893,6 +1945,7 @@ function renderAwaitingDraw(list){
 loadRegisteredTeams().then(list=>{
   renderRegistrations(list);
   renderAwaitingDraw((list||[]).filter(t=>!t.group));
+  renderTeamTicker(list);
   syncTeamsFromRegistrations(list);
 });
 
@@ -2025,9 +2078,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')DRAW_CEREMONY.close(
 /* БОМБАРДИРЫ */
 function renderScorers(){
   const el=document.getElementById('scorersBody');if(!el)return;
-  const list=[...SCORERS].sort((a,b)=>b.g-a.g);
-  el.innerHTML=list.map((s,i)=>`
-    <tr><td class="pos">${i+1}</td><td class="tname">${s.n}</td><td style="text-align:left;color:var(--muted)">${s.team}</td><td class="pts">${s.g}</td></tr>`).join('');
+  const list=computeScorersFromEvents();
+  el.innerHTML=list.length?list.map((s,i)=>`
+    <tr><td class="pos">${i+1}</td><td class="tname">${s.n}</td><td style="text-align:left;color:var(--muted)">${s.team}</td><td class="pts">${s.g}</td></tr>`).join('')
+    :'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Появится, как только в Матч-центре внесут первые голы</td></tr>';
 }
 renderScorers();
 
@@ -2704,24 +2758,10 @@ const ADMIN={
   },
   renderScorersEditor(){
     const root=document.getElementById('scorersEditor');if(!root)return;
-    root.innerHTML=SCORERS.map((s,i)=>`
-      <div class="ed-match">
-        <input type="text" value="${s.n}" placeholder="Игрок" data-si="${i}" data-f="n" style="flex:1.2">
-        <input type="text" value="${s.team}" placeholder="Команда" data-si="${i}" data-f="team" style="flex:1">
-        <input type="number" min="0" value="${s.g}" data-si="${i}" data-f="g">
-        <button class="ed-del" onclick="ADMIN.delScorer(${i})">✕</button>
-      </div>`).join('');
-  },
-  addScorer(){SCORERS.push({n:'',team:'',g:0});this.renderScorersEditor()},
-  delScorer(i){SCORERS.splice(i,1);this.renderScorersEditor()},
-  saveScorers(){
-    document.querySelectorAll('#scorersEditor input').forEach(inp=>{
-      const s=SCORERS[+inp.dataset.si];if(!s)return;
-      s[inp.dataset.f]=inp.dataset.f==='g'?(parseInt(inp.value,10)||0):inp.value;
-    });
-    SCORERS=SCORERS.filter(s=>s.n.trim());
-    localStorage.setItem('rkch_scorers_preview',JSON.stringify(SCORERS));
-    renderScorers();this.renderScorersEditor();
+    const list=computeScorersFromEvents();
+    root.innerHTML=list.length?list.map((s,i)=>`
+      <div class="ed-match"><span class="ed-names">${i+1}. ${s.n} — ${s.team}</span><span class="pts" style="font-family:var(--f-mono);color:var(--gold-lt)">${s.g}</span></div>`).join('')
+      :'<div class="admin-note">Пока нет голов — внесите их во вкладке «Матч-центр».</div>';
   },
   renderNewsEditor(){
     const root=document.getElementById('newsEditor');if(!root)return;
@@ -2804,6 +2844,7 @@ const ADMIN={
     dump[this._mcId]={events:m.events};
     localStorage.setItem('rkch_events_preview',JSON.stringify(dump));
     this.renderMatchCenterEditor(this._mcId);
+    renderScorers();
   },
   enterEditMode(){
     try{
@@ -2883,13 +2924,12 @@ const ADMIN={
     if(r){Object.keys(r).forEach(L=>{GROUP_MATCHES[L]=r[L]});assignMatchIds()}
     const bp=JSON.parse(localStorage.getItem('rkch_bracket_preview')||'null');
     if(bp){BRACKET.length=0;BRACKET.push(...bp);assignMatchIds();renderBracket('bracket');renderBracket('bracketPlayoffMain')}
-    const s=JSON.parse(localStorage.getItem('rkch_scorers_preview')||'null');
-    if(s)SCORERS=s;
     const n=JSON.parse(localStorage.getItem('rkch_news_preview')||'null');
     if(n)NEWS=n;
     const ev=JSON.parse(localStorage.getItem('rkch_events_preview')||'null');
     if(ev)Object.keys(ev).forEach(id=>{const m=findMatchById(id);if(m){m.events=ev[id].events}});
-    if(r||s||n){renderGroups();renderGroupResults();renderHomeMatches();renderScorers();renderNews()}
+    if(r||n){renderGroups();renderGroupResults();renderHomeMatches();renderNews()}
+    if(r||ev)renderScorers();
     const colors=JSON.parse(localStorage.getItem('rkch_colors_preview')||'null');
     if(colors)Object.keys(colors).forEach(k=>document.documentElement.style.setProperty(k,colors[k]));
     const texts=JSON.parse(localStorage.getItem('rkch_text_preview')||'null');
