@@ -1480,7 +1480,8 @@ function computeStandings(L){
   const rows={};
   const touch=(n,c)=>{if(!rows[n])rows[n]={n,c,i:0,w:0,d:0,l:0,gf:0,ga:0,p:0,form:[]};return rows[n]};
   TEAMS.filter(t=>t.g===L).forEach(t=>touch(t.n,t.c));
-  (GROUP_MATCHES[L]||[]).forEach(m=>{
+  const matches=GROUP_MATCHES[L]||[];
+  matches.forEach(m=>{
     const A=touch(m.a,m.ca),B=touch(m.b,m.cb);
     const s=parseScore(m.sc);if(!s)return;
     A.i++;B.i++;A.gf+=s[0];A.ga+=s[1];B.gf+=s[1];B.ga+=s[0];
@@ -1488,7 +1489,35 @@ function computeStandings(L){
     else if(s[0]<s[1]){B.w++;A.l++;B.p+=3;B.form.push('В');A.form.push('П')}
     else{A.d++;B.d++;A.p++;B.p++;A.form.push('Н');B.form.push('Н')}
   });
-  return Object.values(rows).sort((x,y)=>y.p-x.p||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||x.n.localeCompare(y.n));
+  const teamRows=Object.values(rows);
+  function h2h(names){
+    const set=new Set(names),mini={};
+    names.forEach(n=>mini[n]={p:0,gd:0,gf:0});
+    matches.forEach(m=>{
+      if(!set.has(m.a)||!set.has(m.b))return;
+      const s=parseScore(m.sc);if(!s)return;
+      mini[m.a].gf+=s[0];mini[m.a].gd+=s[0]-s[1];
+      mini[m.b].gf+=s[1];mini[m.b].gd+=s[1]-s[0];
+      if(s[0]>s[1])mini[m.a].p+=3;else if(s[0]<s[1])mini[m.b].p+=3;else{mini[m.a].p++;mini[m.b].p++}
+    });
+    return mini;
+  }
+  return teamRows.sort((x,y)=>{
+    if(y.p!==x.p)return y.p-x.p;
+    const tiedNames=teamRows.filter(t=>t.p===x.p).map(t=>t.n);
+    if(tiedNames.length>1){
+      const mini=h2h(tiedNames),mx=mini[x.n],my=mini[y.n];
+      if(mx&&my){
+        if(my.p!==mx.p)return my.p-mx.p;
+        if(my.gd!==mx.gd)return my.gd-mx.gd;
+        if(my.gf!==mx.gf)return my.gf-mx.gf;
+      }
+    }
+    const gdX=x.gf-x.ga,gdY=y.gf-y.ga;
+    if(gdY!==gdX)return gdY-gdX;
+    if(y.gf!==x.gf)return y.gf-x.gf;
+    return x.n.localeCompare(y.n);
+  });
 }
 function getGroupStandings(){
   const letters=[...new Set(TEAMS.map(t=>t.g))].filter(Boolean).sort();
@@ -1953,6 +1982,19 @@ loadRegisteredTeams().then(list=>{
 /* Адрес бэкенда бота (Vercel) — используется только для публикации жеребьёвки,
    обычные посетители сайта его не вызывают. */
 const DRAW_API_BASE='https://ramenskiycup.vercel.app';
+/* Секрет для записи в бэкенд (публикация жеребьёвки, уведомления) —
+   НЕ хранится в коде сайта (в отличие от ADMIN_PASS он не виден в
+   исходнике страницы): запрашивается один раз и остаётся только в
+   localStorage этого браузера. Должен совпадать с ADMIN_SECRET на Vercel. */
+function getBackendSecret(){
+  let s=localStorage.getItem('rkch_backend_secret');
+  if(!s){
+    s=prompt('Введите секретный ключ бэкенда (см. переменную ADMIN_SECRET на Vercel). Останется только в этом браузере.')||'';
+    if(s)localStorage.setItem('rkch_backend_secret',s);
+  }
+  return s;
+}
+function clearBackendSecret(){localStorage.removeItem('rkch_backend_secret')}
 function syncTeamsFromRegistrations(list){
   const grouped=(list||[]).filter(t=>t.group);
   const rosterPreview=JSON.parse(localStorage.getItem('rkch_roster_preview')||'{}');
@@ -2065,9 +2107,11 @@ const DRAW_CEREMONY={
       const r=await fetch(DRAW_API_BASE+'/api/draw',{
         method:'POST',
         headers:{'content-type':'application/json'},
-        body:JSON.stringify({secret:ADMIN_PASS,groups}),
+        body:JSON.stringify({secret:getBackendSecret(),groups}),
       });
-      return await r.json();
+      const data=await r.json();
+      if(!data.ok&&r.status===401)clearBackendSecret();
+      return data;
     }catch(e){
       return {ok:false,error:String(e&&e.message||e)};
     }
@@ -2694,8 +2738,8 @@ const ADMIN={
     fetch(DRAW_API_BASE+'/api/notify',{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({secret:ADMIN_PASS,teamNames:[m.a,m.b],message:lines.join('\n')}),
-    }).then(r=>r.json()).then(data=>{
+      body:JSON.stringify({secret:getBackendSecret(),teamNames:[m.a,m.b],message:lines.join('\n')}),
+    }).then(r=>{if(r.status===401)clearBackendSecret();return r.json()}).then(data=>{
       alert(data.ok?`Уведомление отправлено (${data.sent} из ${data.requested}).`:'Ошибка: '+(data.error||'неизвестная'));
     }).catch(e=>alert('Ошибка сети: '+e.message));
   },
