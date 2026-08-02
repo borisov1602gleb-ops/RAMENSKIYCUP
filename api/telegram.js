@@ -106,28 +106,103 @@ function nextStep(step) {
   return STEP_ORDER[i + 1];
 }
 
+const BTN = {
+  register: '📝 Подать заявку',
+  pending: '📋 Заявки на рассмотрении',
+  teams: '✅ Список команд',
+  limit: '🎲 Лимит команд',
+  clear: '🗑 Очистить всё (новый турнир)',
+};
+
+function menuKeyboard(isAdmin) {
+  const rows = [[{ text: BTN.register }]];
+  if (isAdmin) {
+    rows.push([{ text: BTN.pending }, { text: BTN.teams }]);
+    rows.push([{ text: BTN.limit }, { text: BTN.clear }]);
+  }
+  return { keyboard: rows, resize_keyboard: true };
+}
+
+async function isAdminChat(chatId) {
+  const admin = await loadJson('data/admin.json', null);
+  return !!(admin && admin.chatId === chatId);
+}
+
+async function beginRegistration(chatId) {
+  const [approvedNow, pendingNow, max] = await Promise.all([
+    loadJson('data/registrations.json', []),
+    loadJson('data/registrations-pending.json', []),
+    getMaxTeams(),
+  ]);
+  if (approvedNow.length + pendingNow.length >= max) {
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: `К сожалению, все ${max} мест на турнир уже заняты. Регистрация закрыта — следите за новостями, места могут появиться позже.`,
+    });
+    return;
+  }
+  await saveJson(`data/bot-state.json`, await withState(chatId, { step: 'name', data: {} }), 'bot: start registration');
+  await tg('sendMessage', { chat_id: chatId, text: STEP_PROMPTS.name });
+}
+
+async function showLimitInfo(chatId) {
+  const cur = await getMaxTeams();
+  await tg('sendMessage', { chat_id: chatId, text: `Текущий лимит команд: ${cur}. Чтобы изменить, напишите, например: /limit 20` });
+}
+
+async function showTeamsList(chatId) {
+  const approved = await loadJson('data/registrations.json', []);
+  if (!approved.length) {
+    await tg('sendMessage', { chat_id: chatId, text: 'Пока нет подтверждённых команд.' });
+    return;
+  }
+  const list = approved.map((t, i) => `${i + 1}. ${t.name} (капитан: ${t.captain})`).join('\n');
+  await tg('sendMessage', { chat_id: chatId, text: `Подтверждённые команды (${approved.length}):\n\n${list}\n\nЧтобы удалить команду, напишите: /remove <номер>` });
+}
+
+async function showPending(chatId) {
+  const pending = await loadJson('data/registrations-pending.json', []);
+  if (!pending.length) {
+    await tg('sendMessage', { chat_id: chatId, text: 'Нет заявок на рассмотрении.' });
+    return;
+  }
+  for (const app of pending) await sendAppToAdmin(app, chatId);
+}
+
+async function askClearAll(chatId) {
+  await tg('sendMessage', {
+    chat_id: chatId,
+    text: '⚠️ Это удалит ВСЕ подтверждённые команды и все заявки на рассмотрении с сайта — используется перед началом нового турнира. Отменить нельзя. Точно очистить всё?',
+    reply_markup: {
+      inline_keyboard: [[
+        { text: '✅ Да, очистить всё', callback_data: 'clearall:yes' },
+        { text: '❌ Отмена', callback_data: 'clearall:no' },
+      ]],
+    },
+  });
+}
+
 async function handleMessage(msg) {
   const chatId = msg.chat.id;
   const text = (msg.text || '').trim();
 
   if (text === '/start') {
-    const [approvedNow, pendingNow, max] = await Promise.all([
-      loadJson('data/registrations.json', []),
-      loadJson('data/registrations-pending.json', []),
-      getMaxTeams(),
-    ]);
-    if (approvedNow.length + pendingNow.length >= max) {
-      await tg('sendMessage', {
-        chat_id: chatId,
-        text: `К сожалению, все ${max} мест на турнир уже заняты. Регистрация закрыта — следите за новостями, места могут появиться позже.`,
-      });
-      return;
-    }
-    await saveJson(`data/bot-state.json`, await withState(chatId, { step: 'name', data: {} }), 'bot: start registration');
+    const admin = await isAdminChat(chatId);
     await tg('sendMessage', {
       chat_id: chatId,
-      text: 'Добро пожаловать! Начнём регистрацию команды на Раменский Кубок.\n\n' + STEP_PROMPTS.name,
+      text: [
+        '👋 Добро пожаловать в бот регистрации Раменского Кубка Чемпионов!',
+        '',
+        'Здесь капитаны подают заявки на участие своей команды в турнире 8×8.',
+        admin ? 'Вы — администратор, ниже есть кнопки для управления заявками.' : 'Нажмите кнопку ниже, чтобы подать заявку.',
+      ].join('\n'),
+      reply_markup: menuKeyboard(admin),
     });
+    return;
+  }
+
+  if (text === BTN.register) {
+    await beginRegistration(chatId);
     return;
   }
 
@@ -138,20 +213,18 @@ async function handleMessage(msg) {
       return;
     }
     await saveJson('data/admin.json', { chatId }, 'bot: register admin');
-    await tg('sendMessage', { chat_id: chatId, text: 'Готово! Теперь заявки команд будут приходить сюда на проверку.' });
+    await tg('sendMessage', { chat_id: chatId, text: 'Готово! Теперь заявки команд будут приходить сюда на проверку.', reply_markup: menuKeyboard(true) });
     return;
   }
 
-  if (text.startsWith('/limit')) {
-    const admin = await loadJson('data/admin.json', null);
-    if (!admin || admin.chatId !== chatId) {
+  if (text === BTN.limit || text.startsWith('/limit')) {
+    if (!(await isAdminChat(chatId))) {
       await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
       return;
     }
     const n = parseInt(text.replace('/limit', '').trim(), 10);
     if (!n || n < 1) {
-      const cur = await getMaxTeams();
-      await tg('sendMessage', { chat_id: chatId, text: `Текущий лимит команд: ${cur}. Чтобы изменить, напишите, например: /limit 20` });
+      await showLimitInfo(chatId);
       return;
     }
     await saveJson('data/bot-config.json', { maxTeams: n }, `bot: set max teams to ${n}`);
@@ -159,25 +232,17 @@ async function handleMessage(msg) {
     return;
   }
 
-  if (text === '/teams') {
-    const admin = await loadJson('data/admin.json', null);
-    if (!admin || admin.chatId !== chatId) {
+  if (text === BTN.teams || text === '/teams') {
+    if (!(await isAdminChat(chatId))) {
       await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
       return;
     }
-    const approved = await loadJson('data/registrations.json', []);
-    if (!approved.length) {
-      await tg('sendMessage', { chat_id: chatId, text: 'Пока нет подтверждённых команд.' });
-      return;
-    }
-    const list = approved.map((t, i) => `${i + 1}. ${t.name} (капитан: ${t.captain})`).join('\n');
-    await tg('sendMessage', { chat_id: chatId, text: `Подтверждённые команды (${approved.length}):\n\n${list}\n\nЧтобы удалить команду, напишите: /remove <номер>` });
+    await showTeamsList(chatId);
     return;
   }
 
   if (text.startsWith('/remove')) {
-    const admin = await loadJson('data/admin.json', null);
-    if (!admin || admin.chatId !== chatId) {
+    if (!(await isAdminChat(chatId))) {
       await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
       return;
     }
@@ -194,18 +259,21 @@ async function handleMessage(msg) {
     return;
   }
 
-  if (text === '/pending') {
-    const admin = await loadJson('data/admin.json', null);
-    if (!admin || admin.chatId !== chatId) {
+  if (text === BTN.pending || text === '/pending') {
+    if (!(await isAdminChat(chatId))) {
       await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
       return;
     }
-    const pending = await loadJson('data/registrations-pending.json', []);
-    if (!pending.length) {
-      await tg('sendMessage', { chat_id: chatId, text: 'Нет заявок на рассмотрении.' });
+    await showPending(chatId);
+    return;
+  }
+
+  if (text === BTN.clear) {
+    if (!(await isAdminChat(chatId))) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
       return;
     }
-    for (const app of pending) await sendAppToAdmin(app, chatId);
+    await askClearAll(chatId);
     return;
   }
 
@@ -334,6 +402,18 @@ async function handleCallback(cb) {
   const chatId = cb.message.chat.id;
   if (!admin || admin.chatId !== chatId) {
     await tg('answerCallbackQuery', { callback_query_id: cb.id, text: 'Недоступно' });
+    return;
+  }
+  if (cb.data.startsWith('clearall:')) {
+    if (cb.data === 'clearall:yes') {
+      await saveJson('data/registrations.json', [], 'bot: clear all teams (new tournament)');
+      await saveJson('data/registrations-pending.json', [], 'bot: clear pending applications (new tournament)');
+      await saveJson('data/bot-state.json', {}, 'bot: clear in-progress registrations (new tournament)');
+      await tg('editMessageText', { chat_id: chatId, message_id: cb.message.message_id, text: '✅ Все команды и заявки удалены. Можно начинать регистрацию на новый турнир.' });
+    } else {
+      await tg('editMessageText', { chat_id: chatId, message_id: cb.message.message_id, text: 'Отменено — данные не тронуты.' });
+    }
+    await tg('answerCallbackQuery', { callback_query_id: cb.id });
     return;
   }
   const [action, id] = cb.data.split(':');
