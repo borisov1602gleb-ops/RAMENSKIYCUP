@@ -108,17 +108,21 @@ function nextStep(step) {
 
 const BTN = {
   register: '📝 Подать заявку',
+  myApp: '📄 Моя заявка',
+  groups: '📅 Группы и расписание',
   pending: '📋 Заявки на рассмотрении',
   teams: '✅ Список команд',
   limit: '🎲 Лимит команд',
+  broadcast: '📢 Разослать всем капитанам',
   clear: '🗑 Очистить всё (новый турнир)',
 };
 
 function menuKeyboard(isAdmin) {
-  const rows = [[{ text: BTN.register }]];
+  const rows = [[{ text: BTN.register }, { text: BTN.myApp }], [{ text: BTN.groups }]];
   if (isAdmin) {
     rows.push([{ text: BTN.pending }, { text: BTN.teams }]);
-    rows.push([{ text: BTN.limit }, { text: BTN.clear }]);
+    rows.push([{ text: BTN.limit }, { text: BTN.broadcast }]);
+    rows.push([{ text: BTN.clear }]);
   }
   return { keyboard: rows, resize_keyboard: true };
 }
@@ -169,6 +173,46 @@ async function showPending(chatId) {
   for (const app of pending) await sendAppToAdmin(app, chatId);
 }
 
+async function showGroups(chatId) {
+  const approved = await loadJson('data/registrations.json', []);
+  const grouped = approved.filter((t) => t.group);
+  if (!grouped.length) {
+    await tg('sendMessage', { chat_id: chatId, text: 'Жеребьёвка ещё не проведена — группы появятся здесь сразу после неё.' });
+    return;
+  }
+  const byGroup = {};
+  grouped.forEach((t) => {
+    (byGroup[t.group] = byGroup[t.group] || []).push(t.name);
+  });
+  const letters = Object.keys(byGroup).sort();
+  const text = letters.map((L) => `Группа ${L}:\n${byGroup[L].map((n, i) => `${i + 1}. ${n}`).join('\n')}`).join('\n\n');
+  await tg('sendMessage', { chat_id: chatId, text: `📅 Группы турнира:\n\n${text}\n\nРасписание и результаты матчей — на сайте.` });
+}
+
+async function showMyApplication(chatId) {
+  const state = await loadJson('data/bot-state.json', {});
+  if (state[chatId] && state[chatId].step !== 'broadcast_compose') {
+    await tg('sendMessage', { chat_id: chatId, text: `Вы сейчас заполняете заявку (шаг «${state[chatId].step}»). Продолжайте отвечать на вопросы, либо отправьте /start заново.` });
+    return;
+  }
+  const approved = await loadJson('data/registrations.json', []);
+  const mine = approved.find((t) => t.tgChatId === chatId);
+  if (mine) {
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: `✅ Команда «${mine.name}» одобрена!${mine.group ? ` Группа: ${mine.group}.` : ' Жеребьёвка ещё не проведена.'}`,
+    });
+    return;
+  }
+  const pending = await loadJson('data/registrations-pending.json', []);
+  const minePending = pending.find((t) => t.tgChatId === chatId);
+  if (minePending) {
+    await tg('sendMessage', { chat_id: chatId, text: `⏳ Заявка команды «${minePending.name}» на рассмотрении у организатора.` });
+    return;
+  }
+  await tg('sendMessage', { chat_id: chatId, text: 'Заявок не найдено. Нажмите «📝 Подать заявку», чтобы зарегистрировать команду.' });
+}
+
 async function askClearAll(chatId) {
   await tg('sendMessage', {
     chat_id: chatId,
@@ -206,10 +250,29 @@ async function handleMessage(msg) {
     return;
   }
 
-  if (text === '/admin') {
+  if (text === BTN.myApp) {
+    await showMyApplication(chatId);
+    return;
+  }
+
+  if (text === BTN.groups) {
+    await showGroups(chatId);
+    return;
+  }
+
+  if (text.startsWith('/admin')) {
     const admin = await loadJson('data/admin.json', null);
     if (admin && admin.chatId !== chatId) {
       await tg('sendMessage', { chat_id: chatId, text: 'Администратор уже зарегистрирован.' });
+      return;
+    }
+    if (admin && admin.chatId === chatId) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Вы уже администратор.', reply_markup: menuKeyboard(true) });
+      return;
+    }
+    const setupCode = process.env.ADMIN_SETUP_CODE;
+    if (setupCode && text.replace('/admin', '').trim() !== setupCode) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Для регистрации администратора укажите код: /admin <код>' });
       return;
     }
     await saveJson('data/admin.json', { chatId }, 'bot: register admin');
@@ -277,10 +340,32 @@ async function handleMessage(msg) {
     return;
   }
 
+  if (text === BTN.broadcast) {
+    if (!(await isAdminChat(chatId))) {
+      await tg('sendMessage', { chat_id: chatId, text: 'Эта команда доступна только администратору (отправьте /admin, чтобы им стать).' });
+      return;
+    }
+    await saveJson('data/bot-state.json', await withState(chatId, { step: 'broadcast_compose', data: {} }), 'bot: admin broadcast compose');
+    await tg('sendMessage', { chat_id: chatId, text: 'Напишите текст объявления — он уйдёт всем капитанам подтверждённых команд. Например: «Сегодня в 18:00 первый тур группы A, поле 1».' });
+    return;
+  }
+
   const state = await loadJson('data/bot-state.json', {});
   const my = state[chatId];
   if (!my) {
     await tg('sendMessage', { chat_id: chatId, text: 'Отправьте /start, чтобы подать заявку на регистрацию команды.' });
+    return;
+  }
+
+  if (my.step === 'broadcast_compose') {
+    const approved = await loadJson('data/registrations.json', []);
+    const targets = approved.filter((t) => t.tgChatId);
+    for (const t of targets) {
+      await tg('sendMessage', { chat_id: t.tgChatId, text: `📢 ${text}` });
+    }
+    delete state[chatId];
+    await saveJson('data/bot-state.json', state, 'bot: finish broadcast');
+    await tg('sendMessage', { chat_id: chatId, text: `Готово! Отправлено ${targets.length} командам.` });
     return;
   }
 
