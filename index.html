@@ -1327,6 +1327,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <button class="ad-nav-btn" data-tab="bracket" onclick="ADMIN.switchTab('bracket')"><span>🏆</span>Сетка плей-офф</button>
         <button class="ad-nav-btn" data-tab="settings" onclick="ADMIN.switchTab('settings')"><span>⚙️</span>Настройки сайта</button>
         <button class="ad-nav-btn" data-tab="editmode" onclick="ADMIN.switchTab('editmode')"><span>🎨</span>Режим редактирования</button>
+        <button class="ad-nav-btn" data-tab="backup" onclick="ADMIN.switchTab('backup')"><span>💾</span>Резервная копия</button>
       </div>
       <div class="ad-content" id="adContent">
 
@@ -1428,6 +1429,13 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <p style="margin-bottom:14px;color:var(--muted)">Открывает сам сайт поверх панели. Кликайте на текст — он становится редактируемым прямо на странице. Наверху появится панель с цветами оформления.</p>
           <button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="ADMIN.enterEditMode()">🎨 Войти в режим редактирования</button>
           <div class="admin-note" style="margin-top:14px">Всё видно сразу у вас в браузере. Устроило — напишите «опубликуй правки дизайна», закреплю для всех.</div>
+        </div>
+
+        <div class="ad-pane" data-pane="backup">
+          <h4>Резервная копия</h4>
+          <p style="margin-bottom:14px;color:var(--muted)">Скачайте снимок всех данных турнира одним файлом — команды, расписание групп, сетка плей-офф, новости и настройки сайта, с учётом ваших несохранённых предпросмотров. Полезно перед крупными правками: если что-то пойдёт не так, файл поможет восстановить данные вручную.</p>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:12px" onclick="ADMIN.downloadBackup()">⬇️ Скачать резервную копию (.json)</button>
+          <div class="admin-note">Файл сохраняется на ваш компьютер и никуда не отправляется. Основные данные регистраций и так надёжно хранятся в репозитории на GitHub — это дополнительная подстраховка для локальных предпросмотров.</div>
         </div>
 
       </div>
@@ -2570,6 +2578,25 @@ const ADMIN={
     if(!s.regOpen)return false;
     REG_WIZARD.open();
     return false;
+  },
+  downloadBackup(){
+    const snapshot={
+      exportedAt:new Date().toISOString(),
+      stage:{published:PUBLISHED_STAGE,preview:localStorage.getItem(STAGE_KEY)||null},
+      settings:getSettings(),
+      teams:TEAMS,
+      groupMatches:GROUP_MATCHES,
+      bracket:BRACKET,
+      playoffMatches:PLAYOFF_MATCHES,
+      news:NEWS,
+    };
+    const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`ramenskiycup-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
   renderBracketEditor(){
     const poolEl=document.getElementById('bracketPool');
