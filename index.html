@@ -846,6 +846,8 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 .fx-meta input{width:78px}
 .fx-del{background:none;border:none;color:var(--muted);font-size:.9rem;cursor:pointer;flex-shrink:0;padding:2px 6px}
 .fx-del:hover{color:var(--red)}
+.fx-notify{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;flex-shrink:0;padding:2px 4px}
+.fx-notify:hover{color:var(--gold-lt)}
 .pfe-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px}
 .pfe-chip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:grab}
 .pfe-chip:active{cursor:grabbing}
@@ -2529,6 +2531,15 @@ const ADMIN={
       const na=parseFloat(pair[0][1]),nb=parseFloat(pair[1][1]);
       if(!isNaN(na)&&!isNaN(nb)&&pair[0][0]&&pair[1][0]){pair[0][2]=na>nb?1:0;pair[1][2]=nb>na?1:0}
     }));
+    for(let ri=0;ri<BRACKET.length-1;ri++){
+      BRACKET[ri].m.forEach((pair,mi)=>{
+        const winSide=pair[0][2]?0:(pair[1][2]?1:null);
+        if(winSide===null)return;
+        const nextMi=Math.floor(mi/2),nextSide=mi%2;
+        const nextPair=BRACKET[ri+1]&&BRACKET[ri+1].m[nextMi];
+        if(nextPair)nextPair[nextSide][0]=pair[winSide][0];
+      });
+    }
     assignMatchIds();
     localStorage.setItem('rkch_bracket_preview',JSON.stringify(BRACKET));
     renderBracket('bracket');
@@ -2620,6 +2631,20 @@ const ADMIN={
     assignMatchIds();
     this.renderResultsEditor();
   },
+  notifyMatch(L,i){
+    const m=GROUP_MATCHES[L][i];if(!m)return;
+    if(!m.d&&!m.t){alert('Сначала укажите дату и/или время матча — нечего сообщать капитанам.');return}
+    const s=parseScore(m.sc);
+    const lines=['📅 Обновление по матчу',`${m.a} — ${m.b}`,[m.d,m.t,m.f].filter(Boolean).join(' · ')];
+    if(s)lines.push(`Счёт: ${s[0]} : ${s[1]}`);
+    fetch(DRAW_API_BASE+'/api/notify',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({secret:ADMIN_PASS,teamNames:[m.a,m.b],message:lines.join('\n')}),
+    }).then(r=>r.json()).then(data=>{
+      alert(data.ok?`Уведомление отправлено (${data.sent} из ${data.requested}).`:'Ошибка: '+(data.error||'неизвестная'));
+    }).catch(e=>alert('Ошибка сети: '+e.message));
+  },
   renderResultsEditor(){
     const root=document.getElementById('resultsEditor');if(!root)return;
     const letters=this.realGroupLetters();
@@ -2649,6 +2674,7 @@ const ADMIN={
             <input type="number" min="0" value="${s[0]}" data-g="${L}" data-i="${i}" data-f="sca">
             <input type="number" min="0" value="${s[1]}" data-g="${L}" data-i="${i}" data-f="scb">
             <label class="ed-live"><input type="checkbox" data-g="${L}" data-i="${i}" data-f="live" ${m.live?'checked':''}>LIVE</label>
+            <button class="fx-notify" title="Уведомить капитанов" onclick="ADMIN.notifyMatch('${L}',${i})">🔔</button>
             <button class="fx-del" onclick="ADMIN.removeMatch('${L}',${i})">✕</button>
           </div>`}).join('')||'<div class="admin-note">Пока нет матчей в этой группе.</div>'}
       </div>`}).join('');
