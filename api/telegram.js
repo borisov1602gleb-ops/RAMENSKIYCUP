@@ -210,6 +210,15 @@ async function beginRegistration(chatId) {
     loadJson('data/registrations-pending.json', []),
     getMaxTeams(),
   ]);
+  const already = approvedNow.find((t) => t.tgChatId === chatId) || pendingNow.find((t) => t.tgChatId === chatId);
+  if (already) {
+    const status = approvedNow.includes(already) ? 'уже одобрена' : 'на рассмотрении';
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: `С этого аккаунта уже подана заявка — команда «${already.name}» (${status}). Одному капитану доступна только одна команда в турнире. Если это ошибка, обратитесь к организатору.`,
+    });
+    return;
+  }
   if (approvedNow.length + pendingNow.length >= max) {
     await tg('sendMessage', {
       chat_id: chatId,
