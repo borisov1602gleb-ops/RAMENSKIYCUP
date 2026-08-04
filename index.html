@@ -1359,7 +1359,8 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <p style="margin-bottom:14px;color:var(--muted)">Кнопкой «+ Матч» добавьте игру в нужную группу, выберите соперников. Счёт — турнирные таблицы, форма команд и «Ближайшие матчи» пересчитаются автоматически. Пустой счёт = матч не сыгран.</p>
           <div id="resultsEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveResults()">Сохранить результаты (предпросмотр)</button>
-          <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй результаты» — закреплю для всех.</div>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:8px" onclick="ADMIN.publishMatches()">🚀 Опубликовать результаты, события и сетку</button>
+          <div class="admin-note" style="margin-top:14px">Публикует сразу счёт матчей, события (Матч-центр) и сетку плей-офф — для всех посетителей и для бота (кабинет капитана, карточки).</div>
         </div>
 
         <div class="ad-pane" data-pane="matchcenter">
@@ -1368,7 +1369,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <div class="admin-field"><label>Матч</label><select id="mcMatchSelect" onchange="ADMIN.renderMatchCenterEditor(this.value)"></select></div>
           <div id="mcEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveMatchCenter()">Сохранить (предпросмотр)</button>
-          <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй MVP и хронологию» — закреплю для всех.</div>
+          <div class="admin-note" style="margin-top:14px">Публикуется той же кнопкой «Опубликовать результаты, события и сетку» на вкладке «Результаты матчей».</div>
         </div>
 
         <div class="ad-pane" data-pane="roster">
@@ -1402,7 +1403,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <div id="bracketPool" class="pfe-pool"></div>
           <div id="bracketEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveBracket()">Сохранить сетку (предпросмотр)</button>
-          <div class="admin-note" style="margin-top:14px">Устроило? Напишите «опубликуй сетку плей-офф» — закреплю для всех посетителей.</div>
+          <div class="admin-note" style="margin-top:14px">Публикуется той же кнопкой «Опубликовать результаты, события и сетку» на вкладке «Результаты матчей».</div>
         </div>
 
         <div class="ad-pane" data-pane="settings">
@@ -1994,11 +1995,37 @@ function renderAwaitingDraw(list){
   wrap.style.display='';
   el.innerHTML=list.map(regTeamCardHTML).join('');
 }
-loadRegisteredTeams().then(list=>{
+/* РЕЗУЛЬТАТЫ, СОБЫТИЯ И СЕТКА ПЛЕЙ-ОФФ — публикуются админом одной кнопкой,
+   пишутся в data/matches.json (доступно и сайту, и боту — кабинет капитана,
+   предупреждения о карточках) так же, как жеребьёвка не требует ручной публикации. */
+async function loadPublishedMatches(){
+  try{
+    const r=await fetch('./data/matches.json',{cache:'no-cache'});
+    if(!r.ok)throw new Error('no data file yet');
+    return await r.json();
+  }catch(e){
+    return null;
+  }
+}
+function applyPublishedMatches(pub){
+  if(!pub)return;
+  if(pub.groupMatches)Object.keys(pub.groupMatches).forEach(L=>{GROUP_MATCHES[L]=pub.groupMatches[L]});
+  if(pub.bracket&&pub.bracket.length){BRACKET.length=0;BRACKET.push(...pub.bracket)}
+  if(pub.playoffMatches){PLAYOFF_MATCHES.length=0;PLAYOFF_MATCHES.push(...pub.playoffMatches)}
+  assignMatchIds();
+}
+Promise.all([loadRegisteredTeams(),loadPublishedMatches()]).then(([list,pub])=>{
   renderRegistrations(list);
   renderAwaitingDraw((list||[]).filter(t=>!t.group));
   renderTeamTicker(list);
   syncTeamsFromRegistrations(list);
+  applyPublishedMatches(pub);
+  if(typeof applyLocalPreviews==='function')applyLocalPreviews();
+  renderGroups();renderGroupResults();renderHomeMatches();
+  renderBracket('bracket');renderBracket('bracketPlayoffMain');
+  renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES,false);
+  renderScorers();
+  if(typeof renderFinalStage==='function')renderFinalStage();
 });
 
 /* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ: две корзины (нечётные/чётные по номеру заявки) + анимированная раскладка по группам */
@@ -2842,6 +2869,20 @@ const ADMIN={
     this.renderResultsEditor();
     this.renderMatchCenter();
   },
+  async publishMatches(){
+    try{
+      const r=await fetch(DRAW_API_BASE+'/api/publish-matches',{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({secret:getBackendSecret(),groupMatches:GROUP_MATCHES,bracket:BRACKET,playoffMatches:PLAYOFF_MATCHES}),
+      });
+      const data=await r.json();
+      if(!data.ok&&r.status===401)clearBackendSecret();
+      alert(data.ok?'Опубликовано! Изменения увидят все посетители сайта и бот в течение минуты.':'Не получилось опубликовать: '+(data.error||'ошибка'));
+    }catch(e){
+      alert('Ошибка сети: '+(e&&e.message||e));
+    }
+  },
   renderScorersEditor(){
     const root=document.getElementById('scorersEditor');if(!root)return;
     const list=computeScorersFromEvents();
@@ -3003,25 +3044,26 @@ const ADMIN={
   });
 })();
 
-/* загрузка сохранённых предпросмотров админа */
-(function(){
+/* загрузка сохранённых предпросмотров админа (только в этом браузере, поверх
+   опубликованных данных) — вызывается явно после applyPublishedMatches() */
+function applyLocalPreviews(){
   try{
     const r=JSON.parse(localStorage.getItem('rkch_results_preview')||'null');
     if(r){Object.keys(r).forEach(L=>{GROUP_MATCHES[L]=r[L]});assignMatchIds()}
     const bp=JSON.parse(localStorage.getItem('rkch_bracket_preview')||'null');
-    if(bp){BRACKET.length=0;BRACKET.push(...bp);assignMatchIds();renderBracket('bracket');renderBracket('bracketPlayoffMain')}
+    if(bp){BRACKET.length=0;BRACKET.push(...bp);assignMatchIds()}
     const n=JSON.parse(localStorage.getItem('rkch_news_preview')||'null');
     if(n)NEWS=n;
     const ev=JSON.parse(localStorage.getItem('rkch_events_preview')||'null');
     if(ev)Object.keys(ev).forEach(id=>{const m=findMatchById(id);if(m){m.events=ev[id].events}});
-    if(r||n){renderGroups();renderGroupResults();renderHomeMatches();renderNews()}
-    if(r||ev)renderScorers();
+    if(n)renderNews();
     const colors=JSON.parse(localStorage.getItem('rkch_colors_preview')||'null');
     if(colors)Object.keys(colors).forEach(k=>document.documentElement.style.setProperty(k,colors[k]));
     const texts=JSON.parse(localStorage.getItem('rkch_text_preview')||'null');
     if(texts)Object.keys(texts).forEach(k=>{document.querySelectorAll(`[data-edit-text="${k}"]`).forEach(el=>el.innerHTML=texts[k])});
   }catch(e){}
-})();
+}
+applyLocalPreviews();
 
 function openAdminGate(){
   if(sessionStorage.getItem(ADMIN_SESSION_KEY)==='1')ADMIN.openConsole();else ADMIN.openLogin();

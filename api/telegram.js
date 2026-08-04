@@ -109,6 +109,7 @@ function nextStep(step) {
 const BTN = {
   register: '📝 Подать заявку',
   myApp: '📄 Моя заявка',
+  myTeam: '🏟 Моя команда',
   groups: '📅 Группы и расписание',
   pending: '📋 Заявки на рассмотрении',
   teams: '✅ Список команд',
@@ -118,13 +119,84 @@ const BTN = {
 };
 
 function menuKeyboard(isAdmin) {
-  const rows = [[{ text: BTN.register }, { text: BTN.myApp }], [{ text: BTN.groups }]];
+  const rows = [[{ text: BTN.register }, { text: BTN.myApp }], [{ text: BTN.myTeam }, { text: BTN.groups }]];
   if (isAdmin) {
     rows.push([{ text: BTN.pending }, { text: BTN.teams }]);
     rows.push([{ text: BTN.limit }, { text: BTN.broadcast }]);
     rows.push([{ text: BTN.clear }]);
   }
   return { keyboard: rows, resize_keyboard: true };
+}
+
+function parseScore(sc) {
+  if (!sc) return null;
+  const p = String(sc).split(':').map((s) => parseInt(s.trim(), 10));
+  return p.length === 2 && !isNaN(p[0]) && !isNaN(p[1]) ? p : null;
+}
+
+// Считает место команды в группе, ближайший несыгранный матч и бомбардиров
+// команды из data/matches.json (публикуется админом с сайта одной кнопкой).
+function computeTeamSummary(matchesData, teamName, group) {
+  const gm = (matchesData.groupMatches && matchesData.groupMatches[group]) || [];
+  const rows = {};
+  const touch = (n) => {
+    if (!rows[n]) rows[n] = { n, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+    return rows[n];
+  };
+  gm.forEach((m) => {
+    touch(m.a);
+    touch(m.b);
+    const s = parseScore(m.sc);
+    if (!s) return;
+    const A = rows[m.a], B = rows[m.b];
+    A.gf += s[0]; A.ga += s[1]; B.gf += s[1]; B.ga += s[0];
+    if (s[0] > s[1]) { A.w++; A.p += 3; B.l++; }
+    else if (s[0] < s[1]) { B.w++; B.p += 3; A.l++; }
+    else { A.d++; B.d++; A.p++; B.p++; }
+  });
+  const standings = Object.values(rows).sort((x, y) => y.p - x.p || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf);
+  const position = standings.findIndex((r) => r.n === teamName) + 1;
+  const nextMatch = gm.find((m) => (m.a === teamName || m.b === teamName) && !m.sc && !m.live);
+  const scorers = {};
+  gm.forEach((m) => {
+    (m.events || []).forEach((e) => {
+      if (e.type !== 'goal') return;
+      const t = e.team === 'a' ? m.a : m.b;
+      if (t !== teamName) return;
+      scorers[e.player] = (scorers[e.player] || 0) + 1;
+    });
+  });
+  const scorersList = Object.entries(scorers).sort((a, b) => b[1] - a[1]);
+  return { position, total: standings.length, nextMatch, scorersList, row: rows[teamName] };
+}
+
+async function showMyTeam(chatId) {
+  const approved = await loadJson('data/registrations.json', []);
+  const team = approved.find((t) => t.tgChatId === chatId);
+  if (!team) {
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: 'Команда не найдена. Эта кнопка доступна капитану, который сам регистрировал команду в этом боте.',
+    });
+    return;
+  }
+  if (!team.group) {
+    await tg('sendMessage', { chat_id: chatId, text: `Команда «${team.name}» пока не распределена по группам — ждём жеребьёвку.` });
+    return;
+  }
+  const matchesData = await loadJson('data/matches.json', { groupMatches: {}, bracket: [], playoffMatches: [] });
+  const s = computeTeamSummary(matchesData, team.name, team.group);
+  const lines = [`🏟 Команда «${team.name}» · Группа ${team.group}`];
+  if (s.row) {
+    lines.push(`Место в группе: ${s.position} из ${s.total} · В${s.row.w}-Н${s.row.d}-П${s.row.l} · Мячи ${s.row.gf}:${s.row.ga} · ${s.row.p} очков`);
+  }
+  lines.push(s.nextMatch
+    ? `Следующий матч: ${s.nextMatch.a} — ${s.nextMatch.b}, ${s.nextMatch.d || 'дата уточняется'} ${s.nextMatch.t || ''}`.trim()
+    : 'Следующий матч пока не назначен.');
+  if (s.scorersList.length) {
+    lines.push('Бомбардиры команды: ' + s.scorersList.map(([n, g]) => `${n} (${g})`).join(', '));
+  }
+  await tg('sendMessage', { chat_id: chatId, text: lines.join('\n') });
 }
 
 async function isAdminChat(chatId) {
@@ -260,6 +332,11 @@ async function handleMessage(msg) {
     return;
   }
 
+  if (text === BTN.myTeam) {
+    await showMyTeam(chatId);
+    return;
+  }
+
   if (text.startsWith('/admin')) {
     const admin = await loadJson('data/admin.json', null);
     if (admin && admin.chatId !== chatId) {
@@ -319,6 +396,7 @@ async function handleMessage(msg) {
     const [removed] = approved.splice(idx, 1);
     await saveJson('data/registrations.json', approved, `bot: remove team ${removed.name}`);
     await tg('sendMessage', { chat_id: chatId, text: `Команда «${removed.name}» удалена из турнира.` });
+    await promoteFromWaitlist(chatId);
     return;
   }
 
@@ -449,6 +527,33 @@ async function handleMessage(msg) {
   await tg('sendMessage', { chat_id: chatId, text: STEP_PROMPTS[step2] });
 }
 
+async function approveApplication(app) {
+  const approved = await loadJson('data/registrations.json', []);
+  const max = await getMaxTeams();
+  approved.push({ ...app, approvedAt: new Date().toISOString() });
+  await saveJson('data/registrations.json', approved, `bot: approve ${app.name}`);
+  await tg('sendMessage', {
+    chat_id: app.tgChatId,
+    text: `🎉 Заявка команды «${app.name}» одобрена и добавлена на сайт! Вы — команда №${approved.length} из ${max}.`,
+  });
+  return approved;
+}
+
+// Когда освобождается место (команду удалили), автоматически одобряет
+// следующую по очереди заявку из листа ожидания — чтобы админ не искал вручную.
+async function promoteFromWaitlist(adminChatId) {
+  const pending = await loadJson('data/registrations-pending.json', []);
+  if (!pending.length) return null;
+  const [next] = pending.splice(0, 1);
+  await saveJson('data/registrations-pending.json', pending, `bot: auto-promote ${next.name} from waitlist`);
+  await approveApplication(next);
+  await tg('sendMessage', {
+    chat_id: adminChatId,
+    text: `📈 Освободилось место — команда «${next.name}» автоматически одобрена из листа ожидания.`,
+  });
+  return next;
+}
+
 async function withState(chatId, entry) {
   const state = await loadJson('data/bot-state.json', {});
   state[chatId] = entry;
@@ -512,18 +617,11 @@ async function handleCallback(cb) {
   await saveJson('data/registrations-pending.json', pending, `bot: resolve application ${app.name}`);
 
   if (action === 'a') {
-    const approved = await loadJson('data/registrations.json', []);
-    const max = await getMaxTeams();
-    approved.push({ ...app, approvedAt: new Date().toISOString() });
-    await saveJson('data/registrations.json', approved, `bot: approve ${app.name}`);
+    await approveApplication(app);
     await tg('editMessageText', {
       chat_id: chatId,
       message_id: cb.message.message_id,
       text: cb.message.text + '\n\n✅ Одобрено',
-    });
-    await tg('sendMessage', {
-      chat_id: app.tgChatId,
-      text: `🎉 Заявка команды «${app.name}» одобрена и добавлена на сайт! Вы — команда №${approved.length} из ${max}.`,
     });
     await tg('answerCallbackQuery', { callback_query_id: cb.id, text: 'Одобрено' });
   } else {
