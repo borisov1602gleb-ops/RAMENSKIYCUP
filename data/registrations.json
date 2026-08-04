@@ -51,7 +51,8 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-08-04T12:16:59.362Z",
-    "approvedAt": "2026-08-04T12:17:47.741Z"
+    "approvedAt": "2026-08-04T12:17:47.741Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785846078120",
@@ -105,7 +106,8 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-08-04T12:21:18.120Z",
-    "approvedAt": "2026-08-04T12:21:26.652Z"
+    "approvedAt": "2026-08-04T12:21:26.652Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785846173407",
@@ -159,7 +161,8 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-08-04T12:22:53.407Z",
-    "approvedAt": "2026-08-04T12:23:01.290Z"
+    "approvedAt": "2026-08-04T12:23:01.290Z",
+    "group": "A"
   },
   {
     "id": "584658272-1785846611292",
@@ -213,6 +216,7 @@
     "tgChatId": 584658272,
     "tgUser": "@veospace",
     "submittedAt": "2026-08-04T12:30:11.292Z",
-    "approvedAt": "2026-08-04T12:31:10.228Z"
+    "approvedAt": "2026-08-04T12:31:10.228Z",
+    "group": "A"
   }
 ]
