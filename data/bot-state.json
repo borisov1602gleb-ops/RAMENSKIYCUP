@@ -1,10 +1,11 @@
 {
   "584658272": {
-    "step": "city",
+    "step": "roster",
     "data": {
       "name": "myteam",
       "captain": "korolev",
-      "phone": "82322221122"
+      "phone": "82322221122",
+      "city": "краткий"
     }
   }
 }
