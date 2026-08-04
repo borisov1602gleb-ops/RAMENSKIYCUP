@@ -6,6 +6,12 @@
 <title>РАМЕНСКИЙ КУБОК ЧЕМПИОНОВ · Дворовой турнир 8×8</title>
 <meta name="description" content="Раменский Кубок Чемпионов — дворовой турнир 8×8 в Раменском. Групповой этап, плей-офф и один трофей. Регистрация команд через Telegram-бота.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c0c0c">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="РКЧ">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Раменский Кубок Чемпионов">
 <meta property="og:title" content="Раменский Кубок Чемпионов · Дворовой турнир 8×8">
@@ -375,6 +381,7 @@ main{padding-top:0}
 .tm-close{position:absolute;top:20px;right:20px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:.9rem}
 .mm-print{position:absolute;top:20px;right:64px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);color:var(--muted);font-size:.95rem;background:none;cursor:pointer}
 .mm-print:hover{color:var(--gold-lt);border-color:var(--gold-lt)}
+.mm-qr-print{display:none}
 @media print{
   body *{visibility:hidden}
   .match-modal.open,.match-modal.open *,.protocol-modal.open,.protocol-modal.open *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -382,6 +389,7 @@ main{padding-top:0}
   .match-modal.open .team-modal,.protocol-modal.open .team-modal{width:100%;max-width:none;box-shadow:none;border:none;margin:0}
   .match-modal.open .mm-print,.match-modal.open .tm-close,.match-modal.open .mm-timeline-h,.match-modal.open .mm-timeline,.match-modal.open .mm-empty{display:none!important}
   .protocol-modal.open .tm-close,.protocol-modal.open button{display:none!important}
+  .match-modal.open .mm-qr-print{display:flex!important;align-items:center;gap:14px;margin-top:20px;padding-top:16px;border-top:1px solid #ddd;font-size:.8rem;color:#444}
 }
 .tm-close:hover{color:var(--text);border-color:var(--muted)}
 .tm-body{padding:10px 32px 32px}
@@ -878,6 +886,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 .fx-teams select{flex:1;min-width:0}
 .fx-meta{display:flex;gap:6px;flex-wrap:wrap}
 .fx-meta input{width:78px}
+.fx-meta input[type="datetime-local"]{width:170px;color-scheme:dark}
 .fx-del{background:none;border:none;color:var(--muted);font-size:.9rem;cursor:pointer;flex-shrink:0;padding:2px 6px}
 .fx-del:hover{color:var(--red)}
 .fx-notify{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;flex-shrink:0;padding:2px 4px}
@@ -1635,10 +1644,12 @@ function hashColor(str){
 }
 const TEAM_MODAL={
   _paint(t){
+    this._current=t;
     const crest=t.logo
       ?`<img src="${t.logo}" alt="${t.n}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
       :`${shieldSVG(t.c,sid++)}<span class="ini">${ini(t.n)}</span>`;
     document.getElementById('tmHead').innerHTML=`
+      <button class="mm-print" style="right:64px" onclick="TEAM_MODAL.share()" title="Скачать карточку для соцсетей">📤</button>
       <div class="team-shield">${crest}</div>
       <div><h2>${t.n}</h2><div class="team-grp">${t.groupLabel}</div></div>
       <button class="tm-close" onclick="TEAM_MODAL.close()">✕</button>`;
@@ -1667,8 +1678,70 @@ const TEAM_MODAL={
   close(){
     document.getElementById('teamModal').classList.remove('open');
     document.body.style.overflow='';
+  },
+  async share(){
+    const t=this._current;if(!t)return;
+    const W=1080,H=1080;
+    const canvas=document.createElement('canvas');
+    canvas.width=W;canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    const grad=ctx.createRadialGradient(W*0.3,H*0.2,0,W*0.3,H*0.2,W*0.9);
+    grad.addColorStop(0,'#101827');grad.addColorStop(0.55,'#07080B');grad.addColorStop(1,'#050608');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+    // бейдж
+    ctx.font='700 26px "JetBrains Mono",monospace';
+    ctx.fillStyle='#E8C77E';ctx.textAlign='center';
+    ctx.fillText('РАМЕНСКИЙ КУБОК ЧЕМПИОНОВ',W/2,140);
+    // щит
+    const drawCrest=async()=>{
+      const cx=W/2,cy=340,r=130;
+      if(t.logo){
+        try{
+          const img=await new Promise((res,rej)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=rej;im.src=t.logo});
+          ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.closePath();ctx.clip();
+          ctx.drawImage(img,cx-r,cy-r,r*2,r*2);
+          ctx.restore();
+          return;
+        }catch(e){/* fallback ниже */}
+      }
+      ctx.fillStyle=t.c||'#34A66E';
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='800 88px "Bricolage Grotesque",sans-serif';
+      ctx.textBaseline='middle';
+      ctx.fillText(ini(t.n),cx,cy+6);
+      ctx.textBaseline='alphabetic';
+    };
+    await drawCrest();
+    // название команды
+    ctx.fillStyle='#F5F3EE';ctx.font='800 64px "Bricolage Grotesque",sans-serif';
+    ctx.textAlign='center';
+    wrapText(ctx,t.n.toUpperCase(),W/2,540,940,72);
+    // группа / бейдж
+    ctx.font='600 30px "JetBrains Mono",monospace';ctx.fillStyle='#8B909A';
+    ctx.fillText(t.groupLabel||'',W/2,650);
+    // низ — сайт
+    ctx.font='700 26px "JetBrains Mono",monospace';ctx.fillStyle='#34A66E';
+    ctx.fillText('RAMENSKIYCUP',W/2,H-70);
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`${t.n.replace(/[^a-zA-Zа-яА-Я0-9]+/g,'_')}-rkch.png`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 };
+function wrapText(ctx,text,x,y,maxWidth,lineHeight){
+  const words=text.split(' ');
+  let line='',lines=[];
+  words.forEach(w=>{
+    const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=w}
+    else line=test;
+  });
+  if(line)lines.push(line);
+  const startY=y-((lines.length-1)*lineHeight)/2;
+  lines.forEach((l,i)=>ctx.fillText(l,x,startY+i*lineHeight));
+}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')TEAM_MODAL.close()});
 
 /* ПРОСМОТР ДОКУМЕНТА НА САЙТЕ (iframe, без перехода) */
@@ -1812,7 +1885,8 @@ const MATCH_MODAL={
       <div class="mm-timeline-h">Хронология матча</div>
       ${events.length?`<div class="mm-timeline">${events.map(e=>`
         <div class="mm-ev"><span class="min">${e.min}'</span><span class="side" style="background:${e.team==='a'?(ta?ta.c:'#666'):(tb?tb.c:'#666')}"></span><span class="ic">${EVENT_ICON[e.type]||'•'}</span><span class="pl">${e.player}</span></div>`).join('')}</div>`
-        :'<div class="mm-empty">Матч ещё не сыгран — статистика появится после игры.</div>'}`;
+        :'<div class="mm-empty">Матч ещё не сыгран — статистика появится после игры.</div>'}
+      <div class="mm-qr-print"><img src="${qrImg(SITE_URL+'?match='+encodeURIComponent(m.id),140)}" alt="QR" width="140" height="140"><span>Отсканируйте — откроется live-карточка этого матча на телефоне</span></div>`;
     document.getElementById('matchModal').classList.add('open');
     document.body.style.overflow='hidden';
   },
@@ -2093,12 +2167,21 @@ Promise.all([loadRegisteredTeams(),loadPublishedMatches()]).then(([list,pub])=>{
   renderMatchList('playoffMatchesMount',PLAYOFF_MATCHES,false);
   renderScorers();
   if(typeof renderFinalStage==='function')renderFinalStage();
+  /* deep-link по QR/ссылке: ?match=<id> сразу открывает карточку матча */
+  const deepMatch=new URLSearchParams(location.search).get('match');
+  if(deepMatch&&findMatchById(deepMatch)){
+    go('teams');
+    setTimeout(()=>MATCH_MODAL.open(deepMatch),500);
+  }
 });
 
 /* ЦЕРЕМОНИЯ ЖЕРЕБЬЁВКИ: две корзины (нечётные/чётные по номеру заявки) + анимированная раскладка по группам */
 /* Адрес бэкенда бота (Vercel) — используется только для публикации жеребьёвки,
    обычные посетители сайта его не вызывают. */
 const DRAW_API_BASE='https://ramenskiycup.vercel.app';
+/* Публичный адрес сайта — для QR-кодов на печатных карточках матчей (?match=id открывает нужную карточку). */
+const SITE_URL='https://borisov1602gleb-ops.github.io/RAMENSKIYCUP/';
+function qrImg(url,size){return `https://api.qrserver.com/v1/create-qr-code/?size=${size||120}x${size||120}&data=${encodeURIComponent(url)}`}
 /* Секрет для записи в бэкенд (публикация жеребьёвки, уведомления) —
    НЕ хранится в коде сайта (в отличие от ADMIN_PASS он не виден в
    исходнике страницы): запрашивается один раз и остаётся только в
@@ -2904,6 +2987,7 @@ const ADMIN={
               <input type="text" placeholder="дата" value="${m.d||''}" data-g="${L}" data-i="${i}" data-f="d">
               <input type="text" placeholder="время" value="${m.t||''}" data-g="${L}" data-i="${i}" data-f="t">
               <input type="text" placeholder="площадка" value="${m.f||''}" data-g="${L}" data-i="${i}" data-f="f">
+              <input type="datetime-local" title="Точные дата/время — нужны для напоминаний капитанам и авто-пинга по незаполненным результатам" value="${m.dt||''}" data-g="${L}" data-i="${i}" data-f="dt" onchange="ADMIN.autofillDateFromDt(this)">
             </div>
             <input type="number" min="0" value="${s[0]}" data-g="${L}" data-i="${i}" data-f="sca">
             <input type="number" min="0" value="${s[1]}" data-g="${L}" data-i="${i}" data-f="scb">
@@ -2912,6 +2996,14 @@ const ADMIN={
             <button class="fx-del" onclick="ADMIN.removeMatch('${L}',${i})">✕</button>
           </div>`}).join('')||'<div class="admin-note">Пока нет матчей в этой группе.</div>'}
       </div>`}).join('');
+  },
+  autofillDateFromDt(el){
+    if(!el.value)return;
+    const dEl=document.querySelector(`#resultsEditor input[data-g="${el.dataset.g}"][data-i="${el.dataset.i}"][data-f="d"]`);
+    const tEl=document.querySelector(`#resultsEditor input[data-g="${el.dataset.g}"][data-i="${el.dataset.i}"][data-f="t"]`);
+    const dt=new Date(el.value);
+    if(dEl&&!dEl.value.trim())dEl.value=dt.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+    if(tEl&&!tEl.value.trim())tEl.value=dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
   },
   saveResults(){
     document.querySelectorAll('#resultsEditor select, #resultsEditor input').forEach(inp=>{
@@ -3219,6 +3311,11 @@ document.addEventListener('keydown',e=>{
     typedBuffer='';
   }
 });
+
+/* PWA: устанавливаемость (иконка на главный экран) + быстрые повторные заходы */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});
+}
 </script>
 </body>
 </html>
