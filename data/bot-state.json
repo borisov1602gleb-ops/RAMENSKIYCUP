@@ -1,9 +1,10 @@
 {
   "584658272": {
-    "step": "phone",
+    "step": "city",
     "data": {
       "name": "f",
-      "captain": "fas"
+      "captain": "fas",
+      "phone": "3"
     }
   }
 }
