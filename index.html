@@ -199,6 +199,14 @@ main{padding-top:0}
 .reg-team-card span{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
 .reg-team-card .rtc-badge{margin-top:6px;display:inline-block;font-size:.68rem;letter-spacing:.03em;text-transform:uppercase;color:var(--emerald-lt);background:var(--emerald-glow);padding:3px 8px;border-radius:20px}
 .reg-teams-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:20px;font-size:.92rem}
+
+/* SKELETON-заглушки на время загрузки данных (вместо пустого мигания) */
+.skel{background:linear-gradient(90deg,var(--panel) 25%,var(--panel-2) 37%,var(--panel) 63%);background-size:400% 100%;animation:skelShimmer 1.6s ease infinite;border-radius:14px}
+@keyframes skelShimmer{0%{background-position:100% 50%}100%{background-position:0% 50%}}
+.skel-card{height:78px}
+.skel-row{height:64px;margin-bottom:14px}
+.skel-table{height:240px}
+@media(prefers-reduced-motion:reduce){.skel{animation:none;opacity:.6}}
 .pin-line{position:absolute;top:50%;left:30px;right:30px;height:2px;background:var(--line-2);transform:translateY(-50%)}
 .pin-line-fill{position:absolute;top:0;left:0;height:100%;width:0;background:linear-gradient(90deg,var(--emerald-lt),var(--gold-lt));box-shadow:0 0 14px var(--emerald-glow);transition:width .3s var(--ease)}
 .pin-ball{position:absolute;top:50%;left:30px;transform:translate(-50%,-50%);font-size:1.5rem;z-index:3;transition:left .3s var(--ease);filter:drop-shadow(0 0 8px var(--gold-glow))}
@@ -344,11 +352,14 @@ main{padding-top:0}
 .mm-timeline-h{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:30px 0 14px;display:flex;align-items:center;gap:14px}
 .mm-timeline-h::after{content:'';flex:1;height:1px;background:var(--line)}
 .mm-timeline{display:flex;flex-direction:column;gap:2px}
-.mm-ev{display:flex;align-items:center;gap:14px;padding:10px 6px;border-bottom:1px solid var(--line);font-size:.88rem}
+.mm-ev{display:flex;align-items:center;gap:14px;padding:10px 6px;border-bottom:1px solid var(--line);font-size:.88rem;opacity:0;transform:translateX(-16px);animation:evIn .5s var(--ease) both}
+@keyframes evIn{to{opacity:1;transform:none}}
 .mm-ev .min{font-family:var(--f-mono);font-weight:800;color:var(--gold-lt);width:34px;flex-shrink:0}
-.mm-ev .ic{width:22px;text-align:center;flex-shrink:0}
+.mm-ev .ic{width:22px;text-align:center;flex-shrink:0;display:inline-block;animation:icPop .55s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes icPop{0%{transform:scale(0)}55%{transform:scale(1.4)}100%{transform:scale(1)}}
 .mm-ev .side{width:6px;align-self:stretch;border-radius:3px;flex-shrink:0}
 .mm-ev .pl{flex:1}
+@media(prefers-reduced-motion:reduce){.mm-ev,.mm-ev .ic{animation:none;opacity:1;transform:none}}
 .mm-empty{color:var(--muted);font-size:.88rem;text-align:center;padding:20px 0}
 @media(max-width:640px){.pp{width:52px}.pp .nm{max-width:52px}.mm-teams{font-size:.85rem;gap:10px}.mm-score{font-size:1.2rem;padding:5px 12px}}
 .team-modal{width:min(640px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--shape-lg);box-shadow:0 30px 80px rgba(0,0,0,.55);margin:auto;overflow:hidden}
@@ -356,10 +367,13 @@ main{padding-top:0}
 /* ВИЗАРД РЕГИСТРАЦИИ */
 .rw-dots{display:flex;gap:8px}
 .rw-dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);transition:all .3s var(--ease)}
-.rw-dot.on{background:var(--gold-lt);width:22px;border-radius:4px}
-.rw-dot.done{background:var(--emerald-lt)}
+.rw-dot.on{background:var(--gold-lt);width:22px;border-radius:4px;animation:dotPulse .5s cubic-bezier(.34,1.56,.64,1)}
+.rw-dot.done{background:var(--emerald-lt);animation:dotPulse .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes dotPulse{0%{transform:scale(.4)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
 .rw-step{text-align:center;padding:10px 6px 6px}
-.rw-icon{font-size:2.8rem;margin-bottom:16px}
+.rw-icon{font-size:2.8rem;margin-bottom:16px;display:inline-block;animation:iconDrop .55s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes iconDrop{0%{opacity:0;transform:translateY(-18px) scale(.6)}100%{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.rw-dot.on,.rw-dot.done,.rw-icon{animation:none}}
 .rw-step h3{font-family:var(--f-head);font-weight:800;text-transform:uppercase;font-size:1.3rem;margin-bottom:14px}
 .rw-step p{color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:26px}
 .rw-doclist{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;text-align:left}
@@ -627,9 +641,17 @@ header.scrolled{background:rgba(7,8,11,.42);backdrop-filter:blur(26px) saturate(
 .hero h1 .l2{background:linear-gradient(100deg,var(--emerald-lt) 0%,#ffffff 45%,var(--gold-lt) 90%);background-size:230% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:iride 8s var(--ease) infinite alternate}
 @keyframes iride{from{background-position:0% 50%}to{background-position:100% 50%}}
 
-/* Фоновое фото hero (full-bleed) */
+/* Фоновое фото hero (full-bleed) — показывается, пока нет зарегистрированных команд */
 .hero-photo{position:absolute;inset:0;z-index:-2;background:url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=75&w=1800&auto=format&fit=crop') center 30%/cover no-repeat;filter:saturate(1.15)}
 .hero-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,8,11,.55) 0%,rgba(12,14,18,.62) 55%,var(--bg) 97%)}
+
+/* Мозаика гербов зарегистрированных команд — заменяет фото, как только команды появились */
+.hero-mosaic{position:absolute;inset:0;z-index:-2;display:none;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:3px;opacity:.4;filter:saturate(1.25)}
+.hero-mosaic.on{display:grid}
+.hero-mosaic .hm-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-mosaic .hm-cell svg{width:60%;height:60%}
+.hero-mosaic .hm-cell img{width:100%;height:100%;object-fit:cover}
+.hero-mosaic::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,8,11,.72) 0%,rgba(12,14,18,.78) 55%,var(--bg) 97%)}
 
 /* Фото-плитка в bento */
 .b-photo{padding:0;justify-content:flex-end}
@@ -982,7 +1004,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
       <div class="tag"><span class="dot"></span>Уже с нами</div>
       <h2 class="s-title" style="font-size:1.7rem">Зарегистрированные команды</h2>
     </div>
-    <div id="regTeamsList" class="reg-teams-list"></div>
+    <div id="regTeamsList" class="reg-teams-list"><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div></div>
   </div>
 </div>
 
@@ -1039,6 +1061,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 <section class="view active" id="v-home">
   <div class="hero">
     <div class="hero-photo"></div>
+    <div class="hero-mosaic" id="heroMosaic"></div>
     <div class="hero-veil"></div>
     <div class="container wide hero-flex">
       <div>
@@ -1145,7 +1168,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <div class="tag"><span class="dot"></span>Календарь</div>
         <h2 class="s-title">Ближайшие матчи</h2>
       </div>
-      <div class="matches" id="homeMatches"></div>
+      <div class="matches" id="homeMatches"><div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div></div>
 
       <div class="s-head reveal" style="margin:110px 0 40px">
         <div class="tag gold"><span class="dot"></span>Новости</div>
@@ -1184,7 +1207,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <button class="filter-btn" data-g="C">Группа C</button>
         <button class="filter-btn" data-g="D">Группа D</button>
       </div>
-      <div class="teams-grid" id="teamsGrid"></div>
+      <div class="teams-grid" id="teamsGrid"><div class="skel" style="height:230px"></div><div class="skel" style="height:230px"></div><div class="skel" style="height:230px"></div><div class="skel" style="height:230px"></div></div>
 
       <div id="awaitingDrawBlock" style="display:none;margin-top:60px">
         <div class="s-head reveal">
@@ -1200,7 +1223,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <h2 class="s-title">Группы и расписание</h2>
       </div>
       <div class="group-jump" id="groupJump"></div>
-      <div id="groupsRoot"></div>
+      <div id="groupsRoot"><div class="skel skel-table"></div></div>
 
       <div class="s-head reveal" style="margin:130px 0 40px">
         <div class="tag gold"><span class="dot"></span>Статистика</div>
@@ -1365,7 +1388,8 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
             <button class="admin-stage-btn" data-stage-btn="final" onclick="ADMIN.preview('final')"><span>🎉 Финал</span><span class="k">ЭТАП 5</span></button>
           </div>
           <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.resetPreview()">Сбросить предпросмотр</button>
-          <div class="admin-note">Чтобы выбранный этап увидели <b>все посетители сайта</b>, напишите в чат с Claude: «переключи сайт на этап …» — публикация занимает пару минут.</div>
+          <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-bottom:10px" onclick="ADMIN.publishStage()">🚀 Опубликовать этап для всех</button>
+          <div class="admin-note">Публикует выбранный этап сразу для всех посетителей и устройств (сайт проверяет обновление при каждом заходе) — без чата и ожидания.</div>
         </div>
 
         <div class="ad-pane" data-pane="draw">
@@ -1632,7 +1656,11 @@ const DOCS=[
 const ini=n=>n.replace(/[^А-ЯA-Zа-яa-z ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
 function shieldSVG(c,id){return `<svg viewBox="0 0 60 72"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${c}99"/></linearGradient></defs><path d="M30 2 L56 12 V38 C56 54 44 66 30 70 C16 66 4 54 4 38 V12 Z" fill="url(#g${id})" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/><path d="M30 2 L56 12 V38 C56 54 44 66 30 70 C16 66 4 54 4 38 V12 Z" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="3" transform="scale(.86) translate(4.9,5.6)"/></svg>`}
 let sid=0;
-function miniShield(c,letters){const id=sid++;return `<span class="shield"><svg viewBox="0 0 60 72"><defs><linearGradient id="ms${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${c}99"/></linearGradient></defs><path d="M30 2 L56 12 V38 C56 54 44 66 30 70 C16 66 4 54 4 38 V12 Z" fill="url(#ms${id})" stroke="rgba(255,255,255,.2)" stroke-width="2"/></svg><span class="ini">${letters}</span></span>`}
+function miniShield(c,letters,logo){
+  if(logo)return `<span class="shield"><img src="${logo}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>`;
+  const id=sid++;
+  return `<span class="shield"><svg viewBox="0 0 60 72"><defs><linearGradient id="ms${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${c}99"/></linearGradient></defs><path d="M30 2 L56 12 V38 C56 54 44 66 30 70 C16 66 4 54 4 38 V12 Z" fill="url(#ms${id})" stroke="rgba(255,255,255,.2)" stroke-width="2"/></svg><span class="ini">${letters}</span></span>`;
+}
 
 /* УЧАСТНИКИ */
 /* МОДАЛКА СОСТАВА */
@@ -1883,14 +1911,30 @@ const MATCH_MODAL={
         <div class="pitch-box bot"></div>
       </div>
       <div class="mm-timeline-h">Хронология матча</div>
-      ${events.length?`<div class="mm-timeline">${events.map(e=>`
-        <div class="mm-ev"><span class="min">${e.min}'</span><span class="side" style="background:${e.team==='a'?(ta?ta.c:'#666'):(tb?tb.c:'#666')}"></span><span class="ic">${EVENT_ICON[e.type]||'•'}</span><span class="pl">${e.player}</span></div>`).join('')}</div>`
+      ${events.length?`<div class="mm-timeline">${events.map((e,i)=>`
+        <div class="mm-ev" style="animation-delay:${i*70}ms"><span class="min">${e.min}'</span><span class="side" style="background:${e.team==='a'?(ta?ta.c:'#666'):(tb?tb.c:'#666')}"></span><span class="ic" style="animation-delay:${i*70+150}ms">${EVENT_ICON[e.type]||'•'}</span><span class="pl">${e.player}</span></div>`).join('')}</div>`
         :'<div class="mm-empty">Матч ещё не сыгран — статистика появится после игры.</div>'}
       <div class="mm-qr-print"><img src="${qrImg(SITE_URL+'?match='+encodeURIComponent(m.id),140)}" alt="QR" width="140" height="140"><span>Отсканируйте — откроется live-карточка этого матча на телефоне</span></div>`;
     document.getElementById('matchModal').classList.add('open');
     document.body.style.overflow='hidden';
+    this._startLivePoll(id);
   },
+  _pollTimer:null,
+  _startLivePoll(id){
+    this._stopLivePoll();
+    const m=findMatchById(id);
+    if(!m||!m.live)return;
+    this._pollTimer=setInterval(async()=>{
+      if(!document.getElementById('matchModal').classList.contains('open')){this._stopLivePoll();return}
+      try{const pub=await loadPublishedMatches();if(pub)applyPublishedMatches(pub)}catch(e){}
+      const cur=findMatchById(id);
+      if(!cur){this._stopLivePoll();return}
+      this.open(id);
+    },20000);
+  },
+  _stopLivePoll(){if(this._pollTimer){clearInterval(this._pollTimer);this._pollTimer=null}},
   close(){
+    this._stopLivePoll();
     document.getElementById('matchModal').classList.remove('open');
     document.body.style.overflow='';
   },
@@ -2060,9 +2104,9 @@ function matchRowHTML(m,revealCls){
   return `
   <div class="match-row ${revealCls||''} spot ${m.live?'is-live':''}" ${m.id?`onclick="MATCH_MODAL.open('${m.id}')"`:''}>
     <div class="when">${m.d}<br>${m.t}</div>
-    <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a))}</div>
+    <div class="tm r">${m.a} ${miniShield(m.ca,ini(m.a),findTeamByName(m.a)?.logo)}</div>
     ${mid}
-    <div class="tm">${miniShield(m.cb,ini(m.b))} ${m.b}</div>
+    <div class="tm">${miniShield(m.cb,ini(m.b),findTeamByName(m.b)?.logo)} ${m.b}</div>
     <div class="when">${m.f}</div>
   </div>`;
 }
@@ -2071,7 +2115,6 @@ function renderMatchList(id,data,useReveal){
   el.innerHTML=data.map(m=>matchRowHTML(m,useReveal===false?'':'reveal')).join('');
 }
 function renderHomeMatches(){renderMatchList('homeMatches',upcomingFromGroups())}
-renderHomeMatches();
 
 /* НОВОСТИ */
 function renderNews(){
@@ -2112,6 +2155,20 @@ function renderTeamTicker(list){
   const set=list.map(itemHTML).join('');
   track.innerHTML=set+set;
   wrap.style.display='';
+}
+function renderHeroMosaic(list){
+  const el=document.getElementById('heroMosaic');if(!el)return;
+  if(!list||!list.length){el.classList.remove('on');el.innerHTML='';return}
+  const cellHTML=t=>{
+    const crest=t.logo
+      ?`<img src="${t.logo}" alt="" loading="lazy">`
+      :shieldSVG(hashColor(t.name),sid++);
+    return `<div class="hm-cell">${crest}</div>`;
+  };
+  const repeated=[];
+  while(repeated.length<28)repeated.push(...list);
+  el.innerHTML=repeated.slice(0,28).map(cellHTML).join('');
+  el.classList.add('on');
 }
 function regTeamCardHTML(t){
   const crest=t.logo
@@ -2159,6 +2216,7 @@ Promise.all([loadRegisteredTeams(),loadPublishedMatches()]).then(([list,pub])=>{
   renderRegistrations(list);
   renderAwaitingDraw((list||[]).filter(t=>!t.group));
   renderTeamTicker(list);
+  renderHeroMosaic(list);
   syncTeamsFromRegistrations(list);
   applyPublishedMatches(pub);
   if(typeof applyLocalPreviews==='function')applyLocalPreviews();
@@ -2327,7 +2385,6 @@ function renderScorers(){
     <tr><td class="pos">${i+1}</td><td class="tname">${s.n}</td><td style="text-align:left;color:var(--muted)">${s.team}</td><td class="pts">${s.g}</td></tr>`).join('')
     :'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Появится, как только в Матч-центре внесут первые голы</td></tr>';
 }
-renderScorers();
 
 /* ГРУППОВОЙ ЭТАП: 4 группы, таблица + расписание */
 function formDots(form){
@@ -2339,7 +2396,7 @@ function standTableHTML(rows){
     <thead><tr><th>#</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>О</th><th>Форма</th></tr></thead>
     <tbody>${rows.map((t,i)=>`
       <tr class="${i<2?'qual':''}"><td class="pos">${i+1}</td>
-      <td class="tname">${miniShield(t.c,ini(t.n))}${t.n}</td>
+      <td class="tname">${miniShield(t.c,ini(t.n),findTeamByName(t.n)?.logo)}${t.n}</td>
       <td>${t.i}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}:${t.ga}</td><td class="pts">${t.p}</td><td>${formDots(t.form)}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
@@ -2362,7 +2419,6 @@ function renderGroups(){
     </section>`;
   }).join('');
 }
-renderGroups();
 
 /* ПЛЕЙ-ОФФ */
 function renderBracket(id){
@@ -2398,7 +2454,7 @@ function renderGroupResults(){
   el.innerHTML=Object.keys(standings).map(letter=>{
     const rows=standings[letter];
     return `<div class="group-result-card"><h4>Группа ${letter}</h4><table>${rows.map((t,i)=>`
-      <tr><td>${i+1}</td><td class="tname" style="text-align:left">${miniShield(t.c,ini(t.n))}${t.n}</td><td>${t.p}</td></tr>`).join('')}</table></div>`;
+      <tr><td>${i+1}</td><td class="tname" style="text-align:left">${miniShield(t.c,ini(t.n),findTeamByName(t.n)?.logo)}${t.n}</td><td>${t.p}</td></tr>`).join('')}</table></div>`;
   }).join('');
 }
 renderGroupResults();
@@ -2607,6 +2663,16 @@ function applyStage(stage){
   }else if(typeof stopFinalEffects==='function')stopFinalEffects();
 }
 (function(){applyStage(localStorage.getItem(STAGE_KEY)||PUBLISHED_STAGE)})();
+/* Реальный опубликованный этап (для ВСЕХ посетителей) — читаем из
+   data/site-stage.json, публикуется кнопкой в админке без ручного шага.
+   PUBLISHED_STAGE остаётся резервным значением, пока файла ещё нет. */
+let EFFECTIVE_PUBLISHED_STAGE=PUBLISHED_STAGE;
+fetch('./data/site-stage.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(d=>{
+  if(!d||!d.stage)return;
+  EFFECTIVE_PUBLISHED_STAGE=d.stage;
+  if(!localStorage.getItem(STAGE_KEY))applyStage(d.stage);
+  const lbl=document.getElementById('adminPublishedLabel');if(lbl)lbl.textContent=STAGE_LABELS[d.stage]||d.stage;
+}).catch(()=>{});
 
 /* ГИБКИЕ НАСТРОЙКИ САЙТА */
 const SETTINGS_KEY='rkch_settings_preview';
@@ -2687,11 +2753,27 @@ const ADMIN={
   refreshConsole(){
     const current=document.body.getAttribute('data-stage');
     document.getElementById('adminPreviewLabel').textContent=STAGE_LABELS[current]||current;
-    document.getElementById('adminPublishedLabel').textContent=STAGE_LABELS[PUBLISHED_STAGE];
+    document.getElementById('adminPublishedLabel').textContent=STAGE_LABELS[EFFECTIVE_PUBLISHED_STAGE]||EFFECTIVE_PUBLISHED_STAGE;
     document.querySelectorAll('[data-stage-btn]').forEach(b=>b.classList.toggle('active',b.dataset.stageBtn===current));
   },
   preview(stage){localStorage.setItem(STAGE_KEY,stage);applyStage(stage);this.refreshConsole()},
-  resetPreview(){localStorage.removeItem(STAGE_KEY);applyStage(PUBLISHED_STAGE);this.refreshConsole()},
+  resetPreview(){localStorage.removeItem(STAGE_KEY);applyStage(EFFECTIVE_PUBLISHED_STAGE);this.refreshConsole()},
+  async publishStage(){
+    const stage=document.body.getAttribute('data-stage');
+    try{
+      const r=await fetch(DRAW_API_BASE+'/api/publish-stage',{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({secret:getBackendSecret(),stage}),
+      });
+      const data=await r.json();
+      if(!data.ok&&r.status===401)clearBackendSecret();
+      if(data.ok){EFFECTIVE_PUBLISHED_STAGE=stage;localStorage.removeItem(STAGE_KEY);this.refreshConsole()}
+      alert(data.ok?`Опубликовано! Все посетители увидят «${STAGE_LABELS[stage]}» в течение минуты.`:'Не получилось опубликовать: '+(data.error||'ошибка'));
+    }catch(e){
+      alert('Ошибка сети: '+(e&&e.message||e));
+    }
+  },
   enterFromRegistration(){
     REG_WIZARD.open();
   },
@@ -2759,7 +2841,7 @@ const ADMIN={
   downloadBackup(){
     const snapshot={
       exportedAt:new Date().toISOString(),
-      stage:{published:PUBLISHED_STAGE,preview:localStorage.getItem(STAGE_KEY)||null},
+      stage:{published:EFFECTIVE_PUBLISHED_STAGE,preview:localStorage.getItem(STAGE_KEY)||null},
       settings:getSettings(),
       teams:TEAMS,
       groupMatches:GROUP_MATCHES,
