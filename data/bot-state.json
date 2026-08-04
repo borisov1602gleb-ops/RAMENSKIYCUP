@@ -1,10 +1,11 @@
 {
   "584658272": {
-    "step": "city",
+    "step": "roster",
     "data": {
       "name": "f",
       "captain": "fas",
-      "phone": "3"
+      "phone": "3",
+      "city": "moscow"
     }
   }
 }
