@@ -377,10 +377,11 @@ main{padding-top:0}
 .mm-print:hover{color:var(--gold-lt);border-color:var(--gold-lt)}
 @media print{
   body *{visibility:hidden}
-  .match-modal.open,.match-modal.open *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .match-modal.open{position:absolute;inset:0;padding:0;background:#fff!important}
-  .match-modal.open .team-modal{width:100%;max-width:none;box-shadow:none;border:none;margin:0}
+  .match-modal.open,.match-modal.open *,.protocol-modal.open,.protocol-modal.open *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .match-modal.open,.protocol-modal.open{position:absolute;inset:0;padding:0;background:#fff!important;color:#111}
+  .match-modal.open .team-modal,.protocol-modal.open .team-modal{width:100%;max-width:none;box-shadow:none;border:none;margin:0}
   .match-modal.open .mm-print,.match-modal.open .tm-close,.match-modal.open .mm-timeline-h,.match-modal.open .mm-timeline,.match-modal.open .mm-empty{display:none!important}
+  .protocol-modal.open .tm-close,.protocol-modal.open button{display:none!important}
 }
 .tm-close:hover{color:var(--text);border-color:var(--muted)}
 .tm-body{padding:10px 32px 32px}
@@ -1284,6 +1285,18 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
   </div>
 </div>
 
+<!-- ПРОТОКОЛ МАТЧА (для админа: печать / сохранение в PDF) -->
+<div class="team-modal-overlay protocol-modal" id="protocolModal" onclick="if(event.target===this)PROTOCOL.close()">
+  <div class="team-modal" style="width:min(700px,100%)">
+    <div class="tm-head">
+      <h2>Протокол матча</h2>
+      <button class="tm-close" onclick="PROTOCOL.close()">✕</button>
+    </div>
+    <div class="tm-body" id="protocolBody"></div>
+    <div style="padding:0 32px 32px"><button class="btn btn-emerald" style="width:100%;justify-content:center" onclick="window.print()">🖨 Печать / Сохранить как PDF</button></div>
+  </div>
+</div>
+
 <!-- ВИЗАРД РЕГИСТРАЦИИ КОМАНДЫ -->
 <div class="team-modal-overlay" id="regWizard" onclick="if(event.target===this)REG_WIZARD.close()">
   <div class="team-modal" style="width:min(560px,100%)">
@@ -1320,6 +1333,7 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
         <button class="ad-nav-btn" data-tab="stages" onclick="ADMIN.switchTab('stages')"><span>🚦</span>Этапы сайта</button>
         <button class="ad-nav-btn" data-tab="draw" onclick="ADMIN.switchTab('draw')"><span>🎲</span>Жеребьёвка</button>
         <button class="ad-nav-btn" data-tab="results" onclick="ADMIN.switchTab('results')"><span>⚽</span>Результаты матчей</button>
+        <button class="ad-nav-btn" data-tab="live" onclick="ADMIN.switchTab('live')"><span>🔴</span>Live-ввод</button>
         <button class="ad-nav-btn" data-tab="matchcenter" onclick="ADMIN.switchTab('matchcenter')"><span>🏅</span>Матч-центр</button>
         <button class="ad-nav-btn" data-tab="roster" onclick="ADMIN.switchTab('roster')"><span>👕</span>Составы команд</button>
         <button class="ad-nav-btn" data-tab="scorers" onclick="ADMIN.switchTab('scorers')"><span>🥅</span>Бомбардиры</button>
@@ -1363,12 +1377,20 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
           <div class="admin-note" style="margin-top:14px">Публикует сразу счёт матчей, события (Матч-центр) и сетку плей-офф — для всех посетителей и для бота (кабинет капитана, карточки).</div>
         </div>
 
+        <div class="ad-pane" data-pane="live">
+          <h4>Live-ввод счёта</h4>
+          <p style="margin-bottom:14px;color:var(--muted)">Для быстрого ввода прямо с поля, с телефона — без десктопной админки. Каждое нажатие сразу публикуется на сайт и боту, предпросмотр не нужен.</p>
+          <div class="admin-field"><label>Матч</label><select id="liveMatchSelect" onchange="ADMIN.renderLiveInput(this.value)"></select></div>
+          <div id="liveInputBody"></div>
+        </div>
+
         <div class="ad-pane" data-pane="matchcenter">
           <h4>Матч-центр: MVP и хронология</h4>
           <p style="margin-bottom:14px;color:var(--muted)">Выберите сыгранный матч, укажите MVP и добавьте события (гол/карточка, минута, игрок) — появится в карточке матча на сайте (клик по любому матчу открывает её).</p>
           <div class="admin-field"><label>Матч</label><select id="mcMatchSelect" onchange="ADMIN.renderMatchCenterEditor(this.value)"></select></div>
           <div id="mcEditor"></div>
           <button class="btn btn-emerald" style="width:100%;justify-content:center;margin-top:6px" onclick="ADMIN.saveMatchCenter()">Сохранить (предпросмотр)</button>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="PROTOCOL.open(ADMIN._mcId)">📄 Протокол матча (печать / PDF)</button>
           <div class="admin-note" style="margin-top:14px">Публикуется той же кнопкой «Опубликовать результаты, события и сетку» на вкладке «Результаты матчей».</div>
         </div>
 
@@ -1801,6 +1823,51 @@ const MATCH_MODAL={
   print(){window.print()}
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')MATCH_MODAL.close()});
+
+/* ПРОТОКОЛ МАТЧА (для админа): официальный документ на печать/PDF —
+   отдельно от карточки для болельщиков, с составами и местом под подписи. */
+const PROTOCOL={
+  open(id){
+    const m=findMatchById(id);if(!m)return;
+    const ta=findTeamByName(m.a),tb=findTeamByName(m.b);
+    const s=parseScore(m.sc);
+    const events=(m.events||[]).slice().sort((x,y)=>x.min-y.min);
+    const goals=events.filter(e=>e.type==='goal');
+    const cards=events.filter(e=>e.type==='yellow'||e.type==='red');
+    const rosterTable=(t,label)=>`
+      <div class="tm-pos-h">${label}: ${t?t.n:'—'}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:8px">
+        <tbody>${((t&&t.roster)||[]).map(r=>`<tr><td style="padding:4px 8px;border-bottom:1px solid var(--line);width:36px;font-family:var(--f-mono);color:var(--gold-lt)">#${r[0]}</td><td style="padding:4px 8px;border-bottom:1px solid var(--line)">${r[1]}</td></tr>`).join('')||'<tr><td style="padding:4px 8px;color:var(--muted)">Состав не указан</td></tr>'}</tbody>
+      </table>`;
+    document.getElementById('protocolBody').innerHTML=`
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-weight:800;text-transform:uppercase;letter-spacing:.04em">Раменский Кубок Чемпионов</div>
+        <div style="color:var(--muted);font-size:.85rem">Официальный протокол матча</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:1.25rem;margin-bottom:6px">
+        <span>${m.a}</span><span>${s?`${s[0]} : ${s[1]}`:'— : —'}</span><span>${m.b}</span>
+      </div>
+      <div style="text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:20px">${m.d||'дата не указана'} ${m.t||''} · ${m.f||''}</div>
+      <div class="tm-pos-h">Голы</div>
+      <div style="margin-bottom:14px;font-size:.9rem">${goals.length?goals.map(e=>`${e.min}' — ${e.player} (${e.team==='a'?m.a:m.b})`).join('<br>'):'Голов не было'}</div>
+      <div class="tm-pos-h">Карточки</div>
+      <div style="margin-bottom:14px;font-size:.9rem">${cards.length?cards.map(e=>`${e.min}' — ${e.type==='yellow'?'🟨':'🟥'} ${e.player} (${e.team==='a'?m.a:m.b})`).join('<br>'):'Карточек не было'}</div>
+      ${rosterTable(ta,'Состав команды А')}
+      ${rosterTable(tb,'Состав команды Б')}
+      <div style="margin-top:36px;font-size:.85rem">Подпись судьи: _______________________</div>
+      <div style="display:flex;justify-content:space-between;margin-top:22px;font-size:.85rem;gap:20px">
+        <div style="flex:1">Представитель ${m.a}: _______________</div>
+        <div style="flex:1">Представитель ${m.b}: _______________</div>
+      </div>`;
+    document.getElementById('protocolModal').classList.add('open');
+    document.body.style.overflow='hidden';
+  },
+  close(){
+    document.getElementById('protocolModal').classList.remove('open');
+    document.body.style.overflow='';
+  }
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')PROTOCOL.close()});
 
 /* ЭТАП: ФИНАЛ */
 function findTeamByName(name){
@@ -2524,7 +2591,7 @@ const ADMIN={
   },
   openConsole(){
     document.getElementById('adminConsole').classList.add('open');
-    this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor();this.renderMatchCenter();this.renderRosterEditor();
+    this.refreshConsole();this.refreshSettingsForm();this.renderBracketEditor();this.renderResultsEditor();this.renderScorersEditor();this.renderNewsEditor();this.renderMatchCenter();this.renderRosterEditor();this.renderLiveEditor();
     this.switchTab(this._activeTab||'stages');
   },
   switchTab(name){
@@ -2869,7 +2936,7 @@ const ADMIN={
     this.renderResultsEditor();
     this.renderMatchCenter();
   },
-  async publishMatches(){
+  async publishMatches(silent){
     try{
       const r=await fetch(DRAW_API_BASE+'/api/publish-matches',{
         method:'POST',
@@ -2878,10 +2945,77 @@ const ADMIN={
       });
       const data=await r.json();
       if(!data.ok&&r.status===401)clearBackendSecret();
-      alert(data.ok?'Опубликовано! Изменения увидят все посетители сайта и бот в течение минуты.':'Не получилось опубликовать: '+(data.error||'ошибка'));
+      if(!silent)alert(data.ok?'Опубликовано! Изменения увидят все посетители сайта и бот в течение минуты.':'Не получилось опубликовать: '+(data.error||'ошибка'));
+      return data;
     }catch(e){
-      alert('Ошибка сети: '+(e&&e.message||e));
+      if(!silent)alert('Ошибка сети: '+(e&&e.message||e));
+      return {ok:false,error:String(e&&e.message||e)};
     }
+  },
+  setLiveStatus(text){
+    const st=document.getElementById('liveStatus');
+    if(st)st.textContent=text;
+  },
+  renderLiveEditor(){
+    const sel=document.getElementById('liveMatchSelect');if(!sel)return;
+    const all=[];
+    Object.keys(GROUP_MATCHES).forEach(L=>GROUP_MATCHES[L].forEach(m=>all.push(m)));
+    PLAYOFF_MATCHES.forEach(m=>all.push(m));
+    if(!all.length){sel.innerHTML='';document.getElementById('liveInputBody').innerHTML='<div class="admin-note">Нет матчей — сначала должна пройти жеребьёвка.</div>';return}
+    sel.innerHTML=all.map(m=>`<option value="${m.id}">${m.a} — ${m.b}${m.live?' 🔴 LIVE':''}</option>`).join('');
+    this.renderLiveInput(sel.value);
+  },
+  renderLiveInput(id){
+    const m=findMatchById(id);if(!m)return;
+    this._liveId=id;
+    const s=parseScore(m.sc)||[0,0];
+    document.getElementById('liveInputBody').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-family:var(--f-mono);font-size:1.4rem;font-weight:800;gap:10px">
+        <span style="flex:1;text-align:right;font-size:.95rem">${m.a}</span>
+        <span>${s[0]} : ${s[1]}</span>
+        <span style="flex:1;font-size:.95rem">${m.b}</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <button class="btn btn-emerald" style="flex:1;justify-content:center" onclick="ADMIN.liveGoal('a')">⚽ Гол — ${m.a}</button>
+        <button class="btn btn-emerald" style="flex:1;justify-content:center" onclick="ADMIN.liveGoal('b')">⚽ Гол — ${m.b}</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="ADMIN.liveUndo('a')">−1 ${m.a}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="ADMIN.liveUndo('b')">−1 ${m.b}</button>
+      </div>
+      <button class="btn ${m.live?'btn-ghost':'btn-emerald'}" style="width:100%;justify-content:center;margin-bottom:8px" onclick="ADMIN.liveToggle()">${m.live?'⏹ Завершить матч':'▶️ Начать LIVE'}</button>
+      <div class="admin-note" id="liveStatus">Каждое нажатие сразу публикуется — предпросмотр не нужен.</div>`;
+  },
+  async liveGoal(side){
+    const m=findMatchById(this._liveId);if(!m)return;
+    const s=parseScore(m.sc)||[0,0];
+    if(side==='a')s[0]++;else s[1]++;
+    m.sc=`${s[0]} : ${s[1]}`;
+    assignMatchIds();
+    this.renderLiveInput(this._liveId);
+    renderGroups();renderGroupResults();renderHomeMatches();
+    const data=await this.publishMatches(true);
+    this.setLiveStatus(data.ok?'✓ опубликовано':'⚠️ '+(data.error||'ошибка публикации'));
+  },
+  async liveUndo(side){
+    const m=findMatchById(this._liveId);if(!m)return;
+    const s=parseScore(m.sc)||[0,0];
+    if(side==='a')s[0]=Math.max(0,s[0]-1);else s[1]=Math.max(0,s[1]-1);
+    m.sc=`${s[0]} : ${s[1]}`;
+    this.renderLiveInput(this._liveId);
+    renderGroups();renderGroupResults();renderHomeMatches();
+    const data=await this.publishMatches(true);
+    this.setLiveStatus(data.ok?'✓ опубликовано':'⚠️ '+(data.error||'ошибка публикации'));
+  },
+  async liveToggle(){
+    const m=findMatchById(this._liveId);if(!m)return;
+    m.live=!m.live;
+    if(!m.sc)m.sc='0 : 0';
+    this.renderLiveInput(this._liveId);
+    this.renderLiveEditor();
+    renderGroups();renderGroupResults();renderHomeMatches();
+    const data=await this.publishMatches(true);
+    this.setLiveStatus(data.ok?'✓ опубликовано':'⚠️ '+(data.error||'ошибка публикации'));
   },
   renderScorersEditor(){
     const root=document.getElementById('scorersEditor');if(!root)return;

@@ -574,10 +574,13 @@ async function sendAppToAdmin(app, adminChatId) {
     rosterText,
   ].join('\n');
   const keyboard = {
-    inline_keyboard: [[
-      { text: '✅ Подтвердить', callback_data: `a:${app.id}` },
-      { text: '❌ Отклонить', callback_data: `r:${app.id}` },
-    ]],
+    inline_keyboard: [
+      [
+        { text: '✅ Подтвердить', callback_data: `a:${app.id}` },
+        { text: '❌ Отклонить', callback_data: `r:${app.id}` },
+      ],
+      ...(app.logo ? [[{ text: '🖼 Подтвердить без фото', callback_data: `anp:${app.id}` }]] : []),
+    ],
   };
   if (app.logo) {
     const rawUrl = `https://raw.githubusercontent.com/${process.env.GH_REPO}/${env('GH_BRANCH', 'main')}/${app.logo}`;
@@ -616,12 +619,12 @@ async function handleCallback(cb) {
   const [app] = pending.splice(idx, 1);
   await saveJson('data/registrations-pending.json', pending, `bot: resolve application ${app.name}`);
 
-  if (action === 'a') {
-    await approveApplication(app);
+  if (action === 'a' || action === 'anp') {
+    await approveApplication(action === 'anp' ? { ...app, logo: null } : app);
     await tg('editMessageText', {
       chat_id: chatId,
       message_id: cb.message.message_id,
-      text: cb.message.text + '\n\n✅ Одобрено',
+      text: cb.message.text + (action === 'anp' ? '\n\n✅ Одобрено без фото (фото отклонено модерацией)' : '\n\n✅ Одобрено'),
     });
     await tg('answerCallbackQuery', { callback_query_id: cb.id, text: 'Одобрено' });
   } else {
