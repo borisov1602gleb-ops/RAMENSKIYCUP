@@ -1126,28 +1126,6 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
     </div>
   </div>
 
-  <!-- ПРИЁМ 2: PINNED ФОРМАТ -->
-  <div class="pin-wrap" id="pinWrap">
-    <div class="pin-stage">
-      <div class="container">
-        <div class="pin-head reveal">
-          <div class="tag"><span class="dot"></span>Формат</div>
-          <h2 class="s-title" data-edit-text="pathTitle">Путь к кубку</h2>
-        </div>
-        <div class="pin-track">
-          <div class="pin-line"><div class="pin-line-fill" id="pinFill"></div></div>
-          <div class="pin-ball" id="pinBall">⚽</div>
-          <div class="pin-steps" id="pinSteps">
-            <div class="pin-step on"><div class="pin-node">📝</div><div class="n">ЭТАП 01</div><h3>Заявки</h3><p>12–16 команд подтверждают участие</p></div>
-            <div class="pin-step"><div class="pin-node">🅰️</div><div class="n">ЭТАП 02</div><h3>Группы</h3><p>4 группы, круговая система</p></div>
-            <div class="pin-step"><div class="pin-node">⚔️</div><div class="n">ЭТАП 03</div><h3>Плей-офф</h3><p>По две лучшие выходят на вылет</p></div>
-            <div class="pin-step"><div class="pin-node">🏆</div><div class="n">ФИНАЛ</div><h3>Кубок</h3><p>Чемпион поднимает трофей</p></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ТАБЛО ОТСЧЁТА -->
   <div class="section" style="padding-top:0">
     <div class="container">
@@ -2154,6 +2132,8 @@ function renderTeamTicker(list){
   };
   const set=list.map(itemHTML).join('');
   track.innerHTML=set+set;
+  /* скорость пропорциональна числу команд — иначе при 2-4 командах лента почти не заметна */
+  track.style.animationDuration=Math.max(12,list.length*4.2)+'s';
   wrap.style.display='';
 }
 function renderHeroMosaic(list){
