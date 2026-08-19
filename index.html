@@ -1256,6 +1256,9 @@ body[data-stage="final"] header,body[data-stage="final"] main,body[data-stage="f
 
 <button class="to-top" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+<!-- Вход в админку на телефоне: работает на любом этапе сайта (регистрация/техработы/плей-офф/финал), т.к. лежит вне header/main/footer, которые на этих этапах скрыты. 5 тапов подряд открывают окно входа. -->
+<div id="adminGateTap" aria-hidden="true" onclick="ADMIN.gateTap()" style="position:fixed;right:0;bottom:0;width:52px;height:52px;z-index:9999"></div>
+
 <!-- ПАНЕЛЬ РЕЖИМА РЕДАКТИРОВАНИЯ -->
 <div class="edit-toolbar" id="editToolbar">
   <span class="et-label">🎨 Режим редактирования — кликните на текст на странице</span>
@@ -2719,6 +2722,13 @@ function applySettingsToDom(s){
 (function(){applySettingsToDom(getSettings())})();
 
 const ADMIN={
+  _gateTaps:0,_gateTapTimer:null,
+  gateTap(){
+    this._gateTaps++;
+    clearTimeout(this._gateTapTimer);
+    this._gateTapTimer=setTimeout(()=>{this._gateTaps=0},2500);
+    if(this._gateTaps>=5){this._gateTaps=0;openAdminGate()}
+  },
   openLogin(){
     document.getElementById('adminErr').textContent='';
     document.getElementById('adminLogin').classList.add('open');
